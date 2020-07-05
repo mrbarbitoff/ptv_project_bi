@@ -1399,7 +1399,7 @@ ggplot(cutoff_stats_2, aes(x=classifier, y=PointEst, fill=classifier)) +
 Exploring the effect of filtering predicted low-confidence LoF variants on gene-level PTV allele counts:
 
 ```{r rffilter, warning=FALSE}
-vars_non_true = all_vars[!all_vars$RF_class_25, ]
+vars_non_true = all_vars[all_vars$RF_class_50 %in% c(FALSE, NA), ]
 gene_level = aggregate(AC_main ~ gene, vars_non_true, sum)
 gene_level$source_ac = sapply(as.character(gene_level$gene), function(x) cpl_head[x, 'AC_main'])
 
@@ -1892,6 +1892,39 @@ mean(var_data[var_data$violator == 'yes', ]$pext_avg < 0.5, na.rm=T)
 mean(clv_data$pext_avg < 0.5, na.rm=T)
 ```
 
+We can also investigate the discriminatory power of the model to dissect ClinVar beningn and pathogenic variants:
+
+```{r clvbenpath, warning=FALSE}
+patho = read.table('clv.path.tsv', sep='\t', header=T)
+benign = read.table('clv.benign.tsv', sep='\t', header=T)
+patho$benign = 'no'
+benign$benign = 'yes'
+all_clv = as.data.frame(rbind(patho, benign))
+
+pROC_obj <- roc(all_clv$benign, all_clv$pext_avg,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+sens.ci <- ci.se(pROC_obj)
+plot(sens.ci, type="shape", col="lightblue")
+
+pROC_obj <- roc(all_clv$benign, all_clv$predict_prob,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+sens.ci <- ci.se(pROC_obj)
+plot(sens.ci, type="shape", col="lightblue")
+```
+
+Both our and $p_{ext}$-only model has low power to predict ClinVar pathogenic status. It seems that the RF model performs slightly better, but the difference is tiny and insignificant. Well, the overall performance is pretty poor.
 
 ## Construction of a model based on all variants
 
