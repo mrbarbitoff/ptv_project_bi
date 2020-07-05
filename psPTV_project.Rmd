@@ -1399,7 +1399,7 @@ ggplot(cutoff_stats_2, aes(x=classifier, y=PointEst, fill=classifier)) +
 Exploring the effect of filtering predicted low-confidence LoF variants on gene-level PTV allele counts:
 
 ```{r rffilter, warning=FALSE}
-vars_non_true = all_vars[all_vars$RF_class_50 %in% c(FALSE, NA), ]
+vars_non_true = all_vars[all_vars$RF_class_25 %in% c(FALSE, NA), ]
 gene_level = aggregate(AC_main ~ gene, vars_non_true, sum)
 gene_level$source_ac = sapply(as.character(gene_level$gene), function(x) cpl_head[x, 'AC_main'])
 
@@ -1505,6 +1505,11 @@ for (i in 2:6) {
 
 colnames(flt_gene_data) = c(colnames(flt_gene_data)[1:24], 'no_afr',
                                      'no_sas', 'no_amr', 'no_eas', 'no_nfe')
+flt_gene_data$s_main = sapply(as.character(flt_gene_data$gene),
+        function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x,
+                                        's_main'])[1])
+flt_gene_data = flt_gene_data[flt_gene_data$s_main >= 0.02, ]
+
 tpl = melt(flt_gene_data[, c(1, 21:29)], id.vars=c('gene', 'disease', 'dbin'))
 tpl = na.omit(tpl[tpl$value < 1e-5, ])
 
@@ -1633,6 +1638,11 @@ for (i in 2:6) {
 
 colnames(random_gene_data) = c(colnames(random_gene_data)[1:24], 'no_afr',
                                      'no_sas', 'no_amr', 'no_eas', 'no_nfe')
+random_gene_data$s_main = sapply(as.character(random_gene_data$gene),
+        function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x,
+                                        's_main'])[1])
+random_gene_data = random_gene_data[random_gene_data$s_main >= 0.02, ]
+
 tpl = melt(random_gene_data[, c(1, 21:29)], id.vars=c('gene', 'disease', 'dbin'))
 tpl = na.omit(tpl[tpl$value < 1e-5, ])
 
@@ -1658,7 +1668,7 @@ ggplot(random_gene_data, aes(x=-log10(no_fin_asj_prior), y=-log10(no_fin_asj))) 
   ylab('chi-squared p-value post-filter') + 
   scale_fill_gradientn(colours = mypal)
 
-table(random_gene_data$no_fin_asj > 1e-4 & random_gene_data$no_fin_asj_prior < 1e-5)
+table(random_gene_data$no_fin_asj > 1e-5 & random_gene_data$no_fin_asj_prior < 1e-5)
 
 binconf(sum(random_gene_data$no_fin_asj >= 1e-5 & 
             random_gene_data$no_fin_asj_prior < 1e-5, na.rm=T), 
@@ -1668,7 +1678,7 @@ binconf(sum(random_gene_data$no_fin_asj >= 1e-5 &
 Significantly less genes would be turned non-significant after random exclusion of variants - hence, our model allows to capture some information (though not as many as we'd probably like to). What would the percentage be if we used pext filtering?
 
 ```{r pextfilter, warning=FALSE}
-vars_pext_flt = all_vars[!(all_vars$pext_avg < 0.1), ]
+vars_pext_flt = all_vars[!(all_vars$pext_avg < 0.5), ]
 cov_data = read.table('./covered_genes.tsv', header=T, sep='\t')
 
 vars_pext_flt = vars_pext_flt[as.character(vars_pext_flt$gene) %in% as.character(cov_data$name), ]
@@ -1762,6 +1772,12 @@ for (i in 2:6) {
 
 colnames(pext_gene_data) = c(colnames(pext_gene_data)[1:24], 'no_afr',
                                      'no_sas', 'no_amr', 'no_eas', 'no_nfe')
+
+pext_gene_data$s_main = sapply(as.character(pext_gene_data$gene),
+        function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x,
+                                        's_main'])[1])
+pext_gene_data = pext_gene_data[pext_gene_data$s_main >= 0.02, ]
+
 tpl = melt(pext_gene_data[, c(1, 21:29)], id.vars=c('gene', 'disease', 'dbin'))
 tpl = na.omit(tpl[tpl$value < 1e-5, ])
 
