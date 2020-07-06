@@ -1008,12 +1008,10 @@ Let's try constructing some predictive model to dissect violator and non-violato
 
 ```{r trainglm, warning=FALSE}
 var_data$violator = as.factor(var_data$violator)
-var_data$rescue_conserved = var_data$rescue_loeuf_min <= var_data$min_LOEUF
+var_data$rescue_conserved = var_data$rescue_loeuf_min < var_data$min_LOEUF
 train_ind = sample(1:nrow(var_data), 0.7*nrow(var_data))
 trainset = var_data[train_ind, ]
-include = sapply(as.character(trainset$violator),
-                 function(x) ifelse(x == "yes", TRUE,
-                                    runif(1) < 0.015))
+include = as.character(trainset$violator) == 'yes' | runif(nrow(trainset)) < 0.016
 trainset_balanced = trainset[include, ]
 testset = var_data[-train_ind, ]
 
@@ -1096,7 +1094,7 @@ all_vars$splice = grepl('splice', all_vars$conseq)
 ```
 
 ```{r varspred1, warning=FALSE}
-all_vars$rescue_conserved = all_vars$rescue_loeuf_min <= all_vars$min_LOEUF
+all_vars$rescue_conserved = all_vars$rescue_loeuf_min < all_vars$min_LOEUF
 prediction_forest_all = predict(my_forest, all_vars, type="vote")
 all_vars$prediction_prob = prediction_forest_all[, 2]
 all_vars$pred_class = all_vars$prediction_prob > 0.001
@@ -1278,6 +1276,8 @@ violatoRF_b_res = data.frame(prob=pROC_obj$thresholds,
                            sens=pROC_obj$sensitivities,
                            spec=pROC_obj$specificities)
 
+save(my_forest_b, file='classifier.RData')
+
 ```
 
 ROC shows it performs great! Slightly worse compared to an unbalanced RF, but better than a GLM. Now let's investigate the percentages of positive predictions and also the relationship with constraint in a gene. Here, we evaluate the performance using a loose cutoff that allows for higher sensitivity (93%) and lower specificity (61%).
@@ -1285,7 +1285,7 @@ ROC shows it performs great! Slightly worse compared to an unbalanced RF, but be
 ```{r baleval, warning=FALSE}
 prediction_forest_all = predict(my_forest_b, all_vars, type="vote")
 all_vars$prediction_prob_b = prediction_forest_all[, 2]
-all_vars$pred_class_b = all_vars$prediction_prob_b > 0.245
+all_vars$pred_class_b = all_vars$prediction_prob_b > 0.25
 all_vars$violator_class = all_vars$violator == 'yes'
 
 av_pred = aggregate(pred_class_b~violator, all_vars, 
@@ -1293,7 +1293,7 @@ av_pred = aggregate(pred_class_b~violator, all_vars,
 
 prediction_forest_cons = predict(my_forest_b, var_data, type="vote")
 var_data$prediction_prob_b = prediction_forest_cons[, 2]
-var_data$pred_class_b = var_data$prediction_prob_b > 0.245
+var_data$pred_class_b = var_data$prediction_prob_b > 0.25
 cv_pred = aggregate(pred_class_b~violator, var_data, 
           function(x) binconf(sum(x), length(x)))
 
@@ -1508,7 +1508,7 @@ colnames(flt_gene_data) = c(colnames(flt_gene_data)[1:24], 'no_afr',
 flt_gene_data$s_main = sapply(as.character(flt_gene_data$gene),
         function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x,
                                         's_main'])[1])
-flt_gene_data = flt_gene_data[flt_gene_data$s_main >= 0.02, ]
+#flt_gene_data = flt_gene_data[flt_gene_data$s_main >= 0.02, ]
 
 tpl = melt(flt_gene_data[, c(1, 21:29)], id.vars=c('gene', 'disease', 'dbin'))
 tpl = na.omit(tpl[tpl$value < 1e-5, ])
@@ -1641,7 +1641,7 @@ colnames(random_gene_data) = c(colnames(random_gene_data)[1:24], 'no_afr',
 random_gene_data$s_main = sapply(as.character(random_gene_data$gene),
         function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x,
                                         's_main'])[1])
-random_gene_data = random_gene_data[random_gene_data$s_main >= 0.02, ]
+#random_gene_data = random_gene_data[random_gene_data$s_main >= 0.02, ]
 
 tpl = melt(random_gene_data[, c(1, 21:29)], id.vars=c('gene', 'disease', 'dbin'))
 tpl = na.omit(tpl[tpl$value < 1e-5, ])
@@ -1678,7 +1678,7 @@ binconf(sum(random_gene_data$no_fin_asj >= 1e-5 &
 Significantly less genes would be turned non-significant after random exclusion of variants - hence, our model allows to capture some information (though not as many as we'd probably like to). What would the percentage be if we used pext filtering?
 
 ```{r pextfilter, warning=FALSE}
-vars_pext_flt = all_vars[!(all_vars$pext_avg < 0.5), ]
+vars_pext_flt = all_vars[!(all_vars$pext_avg < 0.25), ]
 cov_data = read.table('./covered_genes.tsv', header=T, sep='\t')
 
 vars_pext_flt = vars_pext_flt[as.character(vars_pext_flt$gene) %in% as.character(cov_data$name), ]
@@ -1776,7 +1776,7 @@ colnames(pext_gene_data) = c(colnames(pext_gene_data)[1:24], 'no_afr',
 pext_gene_data$s_main = sapply(as.character(pext_gene_data$gene),
         function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x,
                                         's_main'])[1])
-pext_gene_data = pext_gene_data[pext_gene_data$s_main >= 0.02, ]
+#pext_gene_data = pext_gene_data[pext_gene_data$s_main >= 0.02, ]
 
 tpl = melt(pext_gene_data[, c(1, 21:29)], id.vars=c('gene', 'disease', 'dbin'))
 tpl = na.omit(tpl[tpl$value < 1e-5, ])
@@ -1813,13 +1813,13 @@ binconf(sum(pext_gene_data$no_fin_asj >= 1e-5 &
 Now let's take a look at what happens if we apply our model to ClinVar pathogenic variants that have multiple submitters (i.e., confident pathogenic). The proportion of positive predictions should be less than the one for gnomAD variants!
 
 ```{r clveval, warning=FALSE}
-clv_data = read.table('clv_ptv_ready.tsv', sep='\t', header=T)
+clv_data = read.table('clv_path_parsed.tsv', sep='\t', header=T)
 clv_data$rescue_conserved = clv_data$rescue_loeuf_min <= clv_data$min_LOEUF
 
 prediction_forest_clv = predict(my_forest_b, clv_data, type="vote")
 clv_data$prediction_prob_b = prediction_forest_clv[, 2]
 clv_data$RF_class_25 = clv_data$prediction_prob_b > 0.25
-clv_data$RF_class_50 = clv_data$prediction_prob_b > 0.50
+clv_data$RF_class_50 = clv_data$prediction_prob_b > 0.5
 clv_data$RF_class_75 = clv_data$prediction_prob_b > 0.75
 clv_data$pext_class = clv_data$pext_avg < 0.1
 
@@ -1911,8 +1911,17 @@ mean(clv_data$pext_avg < 0.5, na.rm=T)
 We can also investigate the discriminatory power of the model to dissect ClinVar beningn and pathogenic variants:
 
 ```{r clvbenpath, warning=FALSE}
-patho = read.table('clv.path.tsv', sep='\t', header=T)
-benign = read.table('clv.benign.tsv', sep='\t', header=T)
+patho = read.table('clv_path_parsed.tsv', sep='\t', header=T)
+patho$rescue_conserved = patho$rescue_loeuf_min < patho$min_LOEUF
+benign = read.table('clv_benign_parsed.tsv', sep='\t', header=T)
+benign$rescue_conserved = benign$rescue_loeuf_min < benign$min_LOEUF
+
+p_pred = predict(my_forest_b, patho, type='vote')
+patho$predict_prob = p_pred[, 2]
+
+b_pred = predict(my_forest_b, benign, type='vote')
+benign$predict_prob = b_pred[, 2]
+
 patho$benign = 'no'
 benign$benign = 'yes'
 all_clv = as.data.frame(rbind(patho, benign))
@@ -1950,9 +1959,7 @@ Let's play around with the data. Try to fit a model using all the genes rather t
 all_vars$violator = as.factor(all_vars$violator)
 train_ind = sample(1:nrow(all_vars), 0.909*nrow(all_vars))
 trainset = all_vars[train_ind, ]
-include = sapply(as.character(trainset$violator),
-                 function(x) ifelse(x == "yes", TRUE,
-                                    runif(1) < 0.165))
+include = as.character(trainset$violator) == 'yes' | runif(nrow(trainset)) < 0.22
 trainset_balanced = trainset[include, ]
 testset = all_vars[-train_ind, ]
 
@@ -1980,6 +1987,7 @@ violatoRF_c_res = data.frame(prob=pROC_obj$thresholds,
                            sens=pROC_obj$sensitivities,
                            spec=pROC_obj$specificities)
 
+save(my_forest_c, file='classifier_c.RData')
 ```
 
 Seems OK! Is it better than the pext-only model?
@@ -2008,9 +2016,9 @@ Great! $p_{ext}$-only model really does nothing on the complete dataset (we coul
 prediction_model_c = predict(my_forest_c, all_vars, type="vote")
 all_vars$pred_all_data = prediction_model_c[, 2]
 
-all_vars$RF_class_25_c = all_vars$pred_all_data > 0.25
-all_vars$RF_class_50_c = all_vars$pred_all_data > 0.5
-all_vars$RF_class_75_c = all_vars$pred_all_data > 0.75
+all_vars$RF_class_25_c = all_vars$pred_all_data > 0.2
+all_vars$RF_class_50_c = all_vars$pred_all_data > 0.4
+all_vars$RF_class_75_c = all_vars$pred_all_data > 0.6
 
 snippet = all_vars[, c('violator', 's_bin', 'RF_class_25_c',
                        'RF_class_50_c', 'RF_class_75_c', 'pext_class')]
@@ -2077,9 +2085,9 @@ The model operates the opposite way, i.e. it annotates more variants in less con
 prediction_forest_ad_clv = predict(my_forest_c, clv_data, type="vote")
 
 clv_data$prediction_prob_c = prediction_forest_ad_clv[, 2]
-clv_data$RF_class_25_c = clv_data$prediction_prob_c > 0.25
-clv_data$RF_class_50_c = clv_data$prediction_prob_c > 0.50
-clv_data$RF_class_75_c = clv_data$prediction_prob_c > 0.75
+clv_data$RF_class_25_c = clv_data$prediction_prob_c > 0.2
+clv_data$RF_class_50_c = clv_data$prediction_prob_c > 0.4
+clv_data$RF_class_75_c = clv_data$prediction_prob_c > 0.6
 clv_data$pext_class = clv_data$pext_avg < 0.1
 
 clv_molten = melt(clv_data[, c('RF_class_25_c', 
@@ -2196,12 +2204,57 @@ ggplot(all_stats, aes(x=s_bin, y=PointEst, fill=violator)) +
   theme_bw() + xlab('Conservation level') +
   ylab('% predicted positive') + 
   facet_wrap(~classifier, nrow=1) +
-  theme(axis.text.x=element_text(angle=90, hjust=1))
+  theme(axis.text.x=element_text(angle=90, hjust=1)) +
+  scale_y_continuous(limits=c(0, 1))
 
 ```
 
-It's a bit awkward that in the genes with low conservation level the overall proportion of variants classified as lcpLoF is slightly lower for violators than for non-violators, but it's great that the proportion of variants classified as lcpLoF for confident ClinVar pathogenic variants is lower than either of them (the differnece is clear and sharp for RF_class_25_c). However, the classifier's behavior is bad given that lots of ClinVar confident pathogenic variants are still fitered out (in contrast to the "b" model). Hence, we stick with the balanced model.
+
+Classifying benign vs pathogenic in ClinVar with the updated model:
+
+```{r clvbenpath2, warning=FALSE}
+patho = read.table('clv_path_parsed.tsv', sep='\t', header=T)
+patho$rescue_conserved = patho$rescue_loeuf_min < patho$min_LOEUF
+benign = read.table('clv_benign_parsed.tsv', sep='\t', header=T)
+benign$rescue_conserved = benign$rescue_loeuf_min < benign$min_LOEUF
+
+p_pred = predict(my_forest_c, patho, type='vote')
+patho$predict_prob = p_pred[, 2]
+
+b_pred = predict(my_forest_c, benign, type='vote')
+benign$predict_prob = b_pred[, 2]
+
+patho$benign = 'no'
+benign$benign = 'yes'
+all_clv = as.data.frame(rbind(patho, benign))
+all_clv_sub = all_clv[ifelse(as.character(all_clv$benign) == 'yes', TRUE,
+                             runif(nrow(all_clv)) < 0.1), ]
+
+pROC_obj <- roc(all_clv_sub$benign, all_clv_sub$pext_avg,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+sens.ci <- ci.se(pROC_obj)
+plot(sens.ci, type="shape", col="lightblue")
+
+pROC_obj <- roc(all_clv_sub$benign, all_clv_sub$predict_prob,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+sens.ci <- ci.se(pROC_obj)
+plot(sens.ci, type="shape", col="lightblue")
+```
+
+Well, the difference is still non-existent in ClinVar benign vs pathogenics, but the difference is much more obvious in the model performance in low and medium bins.
 
 ```{r savetheklavan, warning=FALSE}
-save(my_forest_b, file='classifier.RData')
+print('There are no E-s in Klavan')
 ```
