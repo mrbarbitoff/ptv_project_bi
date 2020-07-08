@@ -16,7 +16,7 @@ ptv_tab$Model_A_prob = predictions_A[, 2]
 ptv_tab$A_LoF_confidence = ifelse(ptv_tab$Model_A_prob > 0.5, 'LOW',
 			   ifelse(ptv_tab$Model_A_prob > 0.25, 'MEDIUM', 'HIGH'))
 
-ptv_tab$Model_B_prob = predictions_A[, 2]
+ptv_tab$Model_B_prob = predictions_B[, 2]
 ptv_tab$B_LoF_confidence = ifelse(ptv_tab$Model_B_prob > 0.5, 'LOW',
                            ifelse(ptv_tab$Model_B_prob > 0.25, 'MEDIUM', 'HIGH'))
 
