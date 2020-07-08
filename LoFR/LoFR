@@ -24,6 +24,6 @@ python3.6 ${TOOL_DIR}/add_avg_pext.py ptv_with_constraint.tsv ${TOOL_DIR}/pext_a
 
 echo "Predicting low-confidence LoF variants..."
 
-Rscript ${TOOL_DIR}/predict.R ptv_ready.tsv ${TOOL_DIR}/classifier.RData &> /dev/null
+Rscript ${TOOL_DIR}/predict.R ptv_ready.tsv ${TOOL_DIR}/classifier_A.RData ${TOOL_DIR}/classifier_B.RData &> /dev/null
 
 echo "Done. Thank you for using LoFR!"

@@ -1101,13 +1101,13 @@ all_vars$pred_class = all_vars$prediction_prob > 0.001
 all_vars$violator_class = all_vars$violator == 'yes'
 
 av_pred = aggregate(pred_class~violator, all_vars, 
-          function(x) binconf(sum(x), length(x)))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))
 
 prediction_forest_cons = predict(my_forest, var_data, type="vote")
 var_data$prediction_prob = prediction_forest_cons[, 2]
 var_data$pred_class = var_data$prediction_prob > 0.001
 cv_pred = aggregate(pred_class~violator, var_data, 
-          function(x) binconf(sum(x), length(x)))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))
 
 pred_all = as.data.frame(as.matrix(rbind(av_pred, cv_pred)))
 colnames(pred_all) = c('violator', 'PointEst', 'Lower', 'Upper')
@@ -1130,14 +1130,14 @@ Perfectly, we see that even in the complete dataset without $s_{het}$-based filt
 table(all_vars[all_vars$s_main < 0.02, ]$pred_class)
 a = as.data.frame(as.matrix(aggregate(pred_class~violator,
                                       all_vars[all_vars$s_main < 0.02, ], 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 print(a)
 
 all_vars$s_bin = ifelse(all_vars$s_main > 0.02, 'high',
                         ifelse(all_vars$s_main > 0.006, 'mediaum', 'low'))
 rf_bin_stats = as.data.frame(as.matrix(aggregate(pred_class~s_bin+violator, 
                                                  all_vars, 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 print(rf_bin_stats)
 ```
 We see several problems with the RF predictions:
@@ -1163,13 +1163,13 @@ Now let's look at the performance of GLM (in its best balanced form, 70% sensiti
 all_vars$glm_prediction = predict(my_fit, all_vars)
 all_vars$glm_class = all_vars$glm_prediction > -4.558241
 av_glm_pred = aggregate(glm_class~violator, all_vars, 
-          function(x) binconf(sum(x), length(x)))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))
 
 
 var_data$glm_prediction = predict(my_fit, var_data)
 var_data$glm_class = var_data$glm_prediction > -4.558241
 cv_glm_pred = aggregate(glm_class~violator, var_data, 
-          function(x) binconf(sum(x), length(x)))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))
 
 
 pred_all = as.data.frame(as.matrix(rbind(av_glm_pred, cv_glm_pred)))
@@ -1191,7 +1191,7 @@ ggplot(pred_all, aes(x=violator, y=PointEst, fill=violator)) +
 table(all_vars[all_vars$s_main < 0.02, ]$glm_class)
 a = as.data.frame(as.matrix(aggregate(glm_class~violator,
                                       all_vars[all_vars$s_main < 0.02, ], 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 print(a)
 ```
 
@@ -1200,7 +1200,7 @@ all_vars$s_bin = ifelse(all_vars$s_main > 0.02, 'high',
                         ifelse(all_vars$s_main > 0.006, 'medium', 'low'))
 bin_stats = as.data.frame(as.matrix(aggregate(glm_class~s_bin+violator, 
                                               all_vars, 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 print(bin_stats)
 ```
 
@@ -1209,7 +1209,7 @@ We can see that here is a nice relationship between constraint and the proportio
 ```{r pextclass, warning=FALSE}
 all_vars$pext_class = all_vars$pext_avg < 0.1
 pext_bin_stats = as.data.frame(as.matrix(aggregate(pext_class~s_bin, all_vars, 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 print(pext_bin_stats)
 ```
 
@@ -1289,13 +1289,13 @@ all_vars$pred_class_b = all_vars$prediction_prob_b > 0.25
 all_vars$violator_class = all_vars$violator == 'yes'
 
 av_pred = aggregate(pred_class_b~violator, all_vars, 
-          function(x) binconf(sum(x), length(x)))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))
 
 prediction_forest_cons = predict(my_forest_b, var_data, type="vote")
 var_data$prediction_prob_b = prediction_forest_cons[, 2]
 var_data$pred_class_b = var_data$prediction_prob_b > 0.25
 cv_pred = aggregate(pred_class_b~violator, var_data, 
-          function(x) binconf(sum(x), length(x)))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))
 
 pred_all = as.data.frame(as.matrix(rbind(av_pred, cv_pred)))
 colnames(pred_all) = c('violator', 'PointEst', 'Lower', 'Upper')
@@ -1314,14 +1314,14 @@ ggplot(pred_all, aes(x=violator, y=PointEst, fill=violator)) +
 ```{r baleval2, warning=FALSE}
 a = as.data.frame(as.matrix(aggregate(pred_class_b~violator,
                                       all_vars[all_vars$s_main < 0.02, ], 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 print(a)
 
 all_vars$s_bin = ifelse(all_vars$s_main > 0.02, 'high',
                         ifelse(all_vars$s_main > 0.006, 'medium', 'low'))
 bin_stats = as.data.frame(as.matrix(aggregate(pred_class_b~s_bin+violator, 
                                               all_vars, 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 print(bin_stats)
 ```
 
@@ -1340,7 +1340,7 @@ snippet_molten = na.omit(melt(snippet, id.vars=c('violator', 's_bin')))
 
 cutoff_stats = as.data.frame(as.matrix(aggregate(value~s_bin+violator+variable, 
                                               snippet_molten, 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 
 colnames(cutoff_stats) = c('s_bin', 'violator', 'classifier', 'PointEst',
                                       'Lower', 'Upper')
@@ -1362,7 +1362,7 @@ ggplot(cutoff_stats, aes(x=s_bin, y=PointEst, fill=s_bin)) +
 # No violator status
 cutoff_stats_2 = as.data.frame(as.matrix(aggregate(value~s_bin+variable, 
                                               snippet_molten, 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 
 colnames(cutoff_stats_2) = c('s_bin', 'classifier', 'PointEst',
                                       'Lower', 'Upper')
@@ -1827,13 +1827,13 @@ clv_molten = melt(clv_data[, c('RF_class_25', 'RF_class_50', 'RF_class_75')],
                   id.vars=c())
 clv_cutoff_stats = as.data.frame(as.matrix(aggregate(value~+variable, 
                                               clv_molten, 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 print(clv_cutoff_stats)
 
 
 gn_cutoff_stats = as.data.frame(as.matrix(aggregate(value~+variable, 
                                               snippet_molten, 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 
 print(gn_cutoff_stats)
 ```
@@ -1854,7 +1854,7 @@ clv_molten = melt(clv_data[, c('RF_class_25',
 
 clv_all_cutoff_stats = as.data.frame(as.matrix(aggregate(value~s_bin+variable, 
                                               clv_molten, 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 
 clv_all_cutoff_stats$violator = 'clinvar'
 colnames(clv_all_cutoff_stats) = c('s_bin', 'classifier', 'PointEst',
@@ -2016,9 +2016,9 @@ Great! $p_{ext}$-only model really does nothing on the complete dataset (we coul
 prediction_model_c = predict(my_forest_c, all_vars, type="vote")
 all_vars$pred_all_data = prediction_model_c[, 2]
 
-all_vars$RF_class_25_c = all_vars$pred_all_data > 0.2
-all_vars$RF_class_50_c = all_vars$pred_all_data > 0.4
-all_vars$RF_class_75_c = all_vars$pred_all_data > 0.6
+all_vars$RF_class_25_c = all_vars$pred_all_data > 0.25
+all_vars$RF_class_50_c = all_vars$pred_all_data > 0.50
+all_vars$RF_class_75_c = all_vars$pred_all_data > 0.75
 
 snippet = all_vars[, c('violator', 's_bin', 'RF_class_25_c',
                        'RF_class_50_c', 'RF_class_75_c', 'pext_class')]
@@ -2026,7 +2026,7 @@ snippet_molten = na.omit(melt(snippet, id.vars=c('violator', 's_bin')))
 
 cutoff_stats = as.data.frame(as.matrix(aggregate(value~s_bin+violator+variable, 
                                               snippet_molten, 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 
 colnames(cutoff_stats) = c('s_bin', 'violator', 'classifier', 'PointEst',
                                       'Lower', 'Upper')
@@ -2048,7 +2048,7 @@ ggplot(cutoff_stats, aes(x=s_bin, y=PointEst, fill=s_bin)) +
 # No violator status
 cutoff_stats_2 = as.data.frame(as.matrix(aggregate(value~s_bin+variable, 
                                               snippet_molten, 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 
 colnames(cutoff_stats_2) = c('s_bin', 'classifier', 'PointEst',
                                       'Lower', 'Upper')
@@ -2081,13 +2081,15 @@ ggplot(cutoff_stats_2, aes(x=classifier, y=PointEst, fill=classifier)) +
 
 The model operates the opposite way, i.e. it annotates more variants in less conserved genes as low-confidence pLoF. What about ClinVar?
 
+### ClinVar-based evaluation of the all-genes model
+
 ```{r modelc_clv, warning=FALSE}
 prediction_forest_ad_clv = predict(my_forest_c, clv_data, type="vote")
 
 clv_data$prediction_prob_c = prediction_forest_ad_clv[, 2]
-clv_data$RF_class_25_c = clv_data$prediction_prob_c > 0.2
-clv_data$RF_class_50_c = clv_data$prediction_prob_c > 0.4
-clv_data$RF_class_75_c = clv_data$prediction_prob_c > 0.6
+clv_data$RF_class_25_c = clv_data$prediction_prob_c > 0.25
+clv_data$RF_class_50_c = clv_data$prediction_prob_c > 0.50
+clv_data$RF_class_75_c = clv_data$prediction_prob_c > 0.75
 clv_data$pext_class = clv_data$pext_avg < 0.1
 
 clv_molten = melt(clv_data[, c('RF_class_25_c', 
@@ -2097,13 +2099,13 @@ clv_molten = melt(clv_data[, c('RF_class_25_c',
                   id.vars=c())
 clv_cutoff_stats = as.data.frame(as.matrix(aggregate(value~+variable, 
                                               clv_molten, 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 print(clv_cutoff_stats)
 
 
 gn_cutoff_stats = as.data.frame(as.matrix(aggregate(value~+variable, 
                                               snippet_molten, 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 
 print(gn_cutoff_stats)
 
@@ -2170,7 +2172,7 @@ clv_molten = melt(clv_data[, c('RF_class_25_c',
 
 clv_all_cutoff_stats = as.data.frame(as.matrix(aggregate(value~s_bin+variable, 
                                               clv_molten, 
-          function(x) binconf(sum(x), length(x)))))
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
 
 clv_all_cutoff_stats$violator = 'clinvar'
 colnames(clv_all_cutoff_stats) = c('s_bin', 'classifier', 'PointEst',
@@ -2253,8 +2255,1272 @@ sens.ci <- ci.se(pROC_obj)
 plot(sens.ci, type="shape", col="lightblue")
 ```
 
-Well, the difference is still non-existent in ClinVar benign vs pathogenics, but the difference is much more obvious in the model performance in low and medium bins.
+The model seems to efficiently predict benignness of the ClinVar variants. 
+
+### Effects on non-uniformity of PTV count distribution
+
+Now let's see if the removal of variants with the new predictor will perform better than the random exclusion (piece of code copied from above)
+
+```{r rffilter2, warning=FALSE}
+vars_non_true = all_vars[all_vars$RF_class_25_c %in% c(FALSE, NA), ]
+gene_level = aggregate(AC_main ~ gene, vars_non_true, sum)
+gene_level$source_ac = sapply(as.character(gene_level$gene), function(x) cpl_head[x, 'AC_main'])
+
+ggplot(gene_level, aes(source_ac, AC_main)) + 
+  geom_hex(aes(fill=log10(..count..))) + 
+  theme_bw() + scale_fill_gradientn(colours = mypal)
+
+```
+
+What happens to the imbalance of PTV counts?
+
+```{r ptvfiltchisq2, warning=FALSE}
+cov_data = read.table('./covered_genes.tsv', header=T, sep='\t')
+
+vars_non_true = vars_non_true[as.character(vars_non_true$gene) %in% as.character(cov_data$name), ]
+vars_non_true$gene = droplevels(vars_non_true$gene)
+
+ac_cols = grepl('AC_', colnames(vars_non_true))
+an_cols = grepl('AN_', colnames(vars_non_true))
+
+gene_data = data.frame(gene = sort(unique(vars_non_true$gene)))
+for (i in colnames(vars_non_true)[ac_cols]){
+  gene_data[, i] = as.numeric(by(vars_non_true[, i], vars_non_true$gene, sum))
+}
+gene_data$AC_main = gene_data$AC_nfe + gene_data$AC_afr + gene_data$AC_amr + 
+  gene_data$AC_eas + gene_data$AC_sas
+for (i in colnames(vars_non_true)[an_cols]){
+  gene_data[, i] = as.numeric(by(vars_non_true[, i], vars_non_true$gene, mean))
+}
+gene_data$AN_main = gene_data$AN_nfe + gene_data$AN_afr + gene_data$AN_amr + 
+  gene_data$AN_eas + gene_data$AN_sas
+
+# Add covered genes with no pLoF
+dummy_row = c(rep(0, 8), rep(colMeans(gene_data[, 10:17])))
+zero_genes = unique(as.character(cov_data$name)[!(as.character(cov_data$name) 
+                             %in% as.character(gene_data$gene))])
+remainder = as.data.frame(t(sapply(zero_genes, function(x) c(x, dummy_row))))
+rownames(remainder) = c()
+colnames(remainder) = colnames(gene_data)
+
+flt_gene_data = as.data.frame(rbind(gene_data, remainder))
+num_cols = colnames(flt_gene_data)[grepl('A[CN]_', colnames(flt_gene_data))]
+for (col in num_cols){
+  flt_gene_data[, col] = as.numeric(as.character(flt_gene_data[, col]))
+}
+flt_gene_data$gene = as.factor(as.character(flt_gene_data$gene))
+flt_gene_data = 
+  flt_gene_data[flt_gene_data$AC_main/flt_gene_data$AN_main <= 0.001, ]
+
+
+# Cassa comparison
+cassa = read.table('cassa_table.csv', header=T, sep='\t')
+rownames(cassa) = cassa$gene_symbol
+flt_gene_data$U = sapply(flt_gene_data$gene, 
+                           function(x) cassa[as.character(x), 'U'])
+flt_gene_data = flt_gene_data[!(is.na(flt_gene_data$U)), ]
+flt_gene_data[is.na(flt_gene_data)] = 1
+
+perc = ecdf(flt_gene_data$U)
+flt_gene_data$tercile = floor(perc(flt_gene_data$U) * 3)
+flt_gene_data$tercile = ifelse(flt_gene_data$tercile < 3,
+                                 flt_gene_data$tercile + 1,
+                                 flt_gene_data$tercile)
+table(flt_gene_data$tercile)
+flt_gene_data$shet_cassa = sapply(flt_gene_data$gene, 
+                                    function(x) cassa[as.character(x), 's_het'])
+
+table(is.na(flt_gene_data$shet_cassa))
+
+rownames(flt_gene_data) = flt_gene_data$gene
+inheritance = read.table('genes_inheritance.txt', header=F, sep='\t', 
+                         stringsAsFactors = F, row.names=1)
+
+flt_gene_data$disease = sapply(rownames(flt_gene_data), 
+                          function(x) ifelse(x%in% rownames(inheritance), 
+                                             inheritance[x, 'V2'], 'none'))
+
+
+flt_gene_data$dbin = sapply(flt_gene_data$disease, 
+                    function(x) ifelse(x == "none", 0, 1))
+flt_gene_data$whole = apply(flt_gene_data,
+                              1,
+                              function(elt)
+                                chisq.test(matrix(c(as.numeric(elt[2:8]),
+                                                    as.numeric(elt[10:16])),
+                                                  byrow=T, nrow=2))$p.value)
+
+flt_gene_data$no_fin_asj = apply(flt_gene_data,
+                              1,
+                              function(elt)
+                                chisq.test(matrix(c(as.numeric(elt[2:6]),
+                                                    as.numeric(elt[10:14])),
+                                                  byrow=T, nrow=2))$p.value)
+
+for (i in 2:6) { 
+  flt_gene_data[, ncol(flt_gene_data) + 1] = apply(flt_gene_data, 
+                               1, 
+                               function(elt) 
+                                 chisq.test(matrix(c(as.numeric(elt[2:6][c(2:6) != i]),
+                                                     as.numeric(elt[10:14][c(10:14) != 8+i])),
+                                                   byrow=T, nrow=2))$p.value)
+}
+
+colnames(flt_gene_data) = c(colnames(flt_gene_data)[1:24], 'no_afr',
+                                     'no_sas', 'no_amr', 'no_eas', 'no_nfe')
+flt_gene_data$s_main = sapply(as.character(flt_gene_data$gene),
+        function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x,
+                                        's_main'])[1])
+#flt_gene_data = flt_gene_data[flt_gene_data$s_main >= 0.02, ]
+
+tpl = melt(flt_gene_data[, c(1, 21:29)], id.vars=c('gene', 'disease', 'dbin'))
+tpl = na.omit(tpl[tpl$value < 1e-5, ])
+
+sum(tpl$variable == 'whole')
+sum(tpl$variable == 'whole' & tpl$dbin == 1)
+
+sum(tpl$variable == 'no_fin_asj')
+sum(tpl$variable == 'no_fin_asj' & tpl$dbin == 1)
+
+ggplot(tpl, aes(x=variable, fill=as.factor(dbin))) + geom_bar() +
+  theme_bw() + coord_flip()
+
+flt_gene_data$no_fin_asj = sapply(flt_gene_data$no_fin_asj,
+                                    function(x) ifelse(is.na(x), 1, x))
+
+flt_gene_data$no_fin_asj_prior = sapply(as.character(flt_gene_data$gene),
+function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x, 'no_fin_asj'])[1])
+
+ggplot(flt_gene_data, aes(x=-log10(no_fin_asj_prior), y=-log10(no_fin_asj))) +
+  geom_hex(aes(fill=log10(..count..))) + 
+  theme_bw() +
+  xlab('chi-squared p-value pre-filter') + 
+  ylab('chi-squared p-value post-filter') + 
+  scale_fill_gradientn(colours = mypal)
+
+table(flt_gene_data$no_fin_asj > 1e-5 & flt_gene_data$no_fin_asj_prior < 1e-5)
+
+binconf(sum(flt_gene_data$no_fin_asj >= 1e-5 & 
+            flt_gene_data$no_fin_asj_prior < 1e-5, na.rm=T), 
+        sum(flt_gene_data$no_fin_asj_prior < 1e-5, na.rm=T))
+```
+Compare the percentage of genes with no imbalance after filtering with RF model compared to random exclusion of variants:
+
+```{r testrandom2, warning=FALSE}
+vars_random = all_vars[sample(1:nrow(all_vars), nrow(vars_non_true)), ]
+cov_data = read.table('./covered_genes.tsv', header=T, sep='\t')
+
+vars_random = vars_random[as.character(vars_random$gene) %in% as.character(cov_data$name), ]
+vars_random$gene = droplevels(vars_random$gene)
+
+ac_cols = grepl('AC_', colnames(vars_random))
+an_cols = grepl('AN_', colnames(vars_random))
+
+gene_data = data.frame(gene = sort(unique(vars_random$gene)))
+for (i in colnames(vars_random)[ac_cols]){
+  gene_data[, i] = as.numeric(by(vars_random[, i], vars_random$gene, sum))
+}
+gene_data$AC_main = gene_data$AC_nfe + gene_data$AC_afr + gene_data$AC_amr + 
+  gene_data$AC_eas + gene_data$AC_sas
+for (i in colnames(vars_random)[an_cols]){
+  gene_data[, i] = as.numeric(by(vars_random[, i], vars_random$gene, mean))
+}
+gene_data$AN_main = gene_data$AN_nfe + gene_data$AN_afr + gene_data$AN_amr + 
+  gene_data$AN_eas + gene_data$AN_sas
+
+# Add covered genes with no pLoF
+dummy_row = c(rep(0, 8), rep(colMeans(gene_data[, 10:17])))
+zero_genes = unique(as.character(cov_data$name)[!(as.character(cov_data$name) 
+                             %in% as.character(gene_data$gene))])
+remainder = as.data.frame(t(sapply(zero_genes, function(x) c(x, dummy_row))))
+rownames(remainder) = c()
+colnames(remainder) = colnames(gene_data)
+
+random_gene_data = as.data.frame(rbind(gene_data, remainder))
+num_cols = colnames(random_gene_data)[grepl('A[CN]_', colnames(random_gene_data))]
+for (col in num_cols){
+  random_gene_data[, col] = as.numeric(as.character(random_gene_data[, col]))
+}
+random_gene_data$gene = as.factor(as.character(random_gene_data$gene))
+random_gene_data = 
+  random_gene_data[random_gene_data$AC_main/random_gene_data$AN_main <= 0.001, ]
+
+
+# Cassa comparison
+cassa = read.table('cassa_table.csv', header=T, sep='\t')
+rownames(cassa) = cassa$gene_symbol
+random_gene_data$U = sapply(random_gene_data$gene, 
+                           function(x) cassa[as.character(x), 'U'])
+random_gene_data = random_gene_data[!(is.na(random_gene_data$U)), ]
+random_gene_data[is.na(random_gene_data)] = 1
+
+perc = ecdf(random_gene_data$U)
+random_gene_data$tercile = floor(perc(random_gene_data$U) * 3)
+random_gene_data$tercile = ifelse(random_gene_data$tercile < 3,
+                                 random_gene_data$tercile + 1,
+                                 random_gene_data$tercile)
+table(random_gene_data$tercile)
+random_gene_data$shet_cassa = sapply(random_gene_data$gene, 
+                                    function(x) cassa[as.character(x), 's_het'])
+
+table(is.na(random_gene_data$shet_cassa))
+
+rownames(random_gene_data) = random_gene_data$gene
+inheritance = read.table('genes_inheritance.txt', header=F, sep='\t', 
+                         stringsAsFactors = F, row.names=1)
+
+random_gene_data$disease = sapply(rownames(random_gene_data), 
+                          function(x) ifelse(x%in% rownames(inheritance), 
+                                             inheritance[x, 'V2'], 'none'))
+
+
+random_gene_data$dbin = sapply(random_gene_data$disease, 
+                    function(x) ifelse(x == "none", 0, 1))
+random_gene_data$whole = apply(random_gene_data,
+                              1,
+                              function(elt)
+                                chisq.test(matrix(c(as.numeric(elt[2:8]),
+                                                    as.numeric(elt[10:16])),
+                                                  byrow=T, nrow=2))$p.value)
+
+random_gene_data$no_fin_asj = apply(random_gene_data,
+                              1,
+                              function(elt)
+                                chisq.test(matrix(c(as.numeric(elt[2:6]),
+                                                    as.numeric(elt[10:14])),
+                                                  byrow=T, nrow=2))$p.value)
+
+for (i in 2:6) { 
+  random_gene_data[, ncol(random_gene_data) + 1] = apply(random_gene_data, 
+                               1, 
+                               function(elt) 
+                                 chisq.test(matrix(c(as.numeric(elt[2:6][c(2:6) != i]),
+                                                     as.numeric(elt[10:14][c(10:14) != 8+i])),
+                                                   byrow=T, nrow=2))$p.value)
+}
+
+colnames(random_gene_data) = c(colnames(random_gene_data)[1:24], 'no_afr',
+                                     'no_sas', 'no_amr', 'no_eas', 'no_nfe')
+random_gene_data$s_main = sapply(as.character(random_gene_data$gene),
+        function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x,
+                                        's_main'])[1])
+#random_gene_data = random_gene_data[random_gene_data$s_main >= 0.02, ]
+
+tpl = melt(random_gene_data[, c(1, 21:29)], id.vars=c('gene', 'disease', 'dbin'))
+tpl = na.omit(tpl[tpl$value < 1e-5, ])
+
+sum(tpl$variable == 'whole')
+sum(tpl$variable == 'whole' & tpl$dbin == 1)
+
+sum(tpl$variable == 'no_fin_asj')
+sum(tpl$variable == 'no_fin_asj' & tpl$dbin == 1)
+
+ggplot(tpl, aes(x=variable, fill=as.factor(dbin))) + geom_bar() +
+  theme_bw() + coord_flip()
+
+random_gene_data$no_fin_asj = sapply(random_gene_data$no_fin_asj,
+                                    function(x) ifelse(is.na(x), 1, x))
+
+random_gene_data$no_fin_asj_prior = sapply(as.character(random_gene_data$gene),
+function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x, 'no_fin_asj'])[1])
+
+ggplot(random_gene_data, aes(x=-log10(no_fin_asj_prior), y=-log10(no_fin_asj))) +
+  geom_hex(aes(fill=log10(..count..))) + 
+  theme_bw() +
+  xlab('chi-squared p-value pre-filter') + 
+  ylab('chi-squared p-value post-filter') + 
+  scale_fill_gradientn(colours = mypal)
+
+table(random_gene_data$no_fin_asj > 1e-5 & random_gene_data$no_fin_asj_prior < 1e-5)
+
+binconf(sum(random_gene_data$no_fin_asj >= 1e-5 & 
+            random_gene_data$no_fin_asj_prior < 1e-5, na.rm=T), 
+        sum(random_gene_data$no_fin_asj_prior < 1e-5, na.rm=T))
+```
+
+And with the matching in terms of the number of removed variants pext-based filter.
+
+```{r pextfilter2, warning=FALSE}
+vars_pext_flt = all_vars[!(all_vars$pext_avg < 0.6), ]
+cov_data = read.table('./covered_genes.tsv', header=T, sep='\t')
+
+vars_pext_flt = vars_pext_flt[as.character(vars_pext_flt$gene) %in% as.character(cov_data$name), ]
+vars_pext_flt$gene = droplevels(vars_pext_flt$gene)
+
+ac_cols = grepl('AC_', colnames(vars_pext_flt))
+an_cols = grepl('AN_', colnames(vars_pext_flt))
+
+gene_data = data.frame(gene = sort(unique(vars_pext_flt$gene)))
+for (i in colnames(vars_pext_flt)[ac_cols]){
+  gene_data[, i] = as.numeric(by(vars_pext_flt[, i], vars_pext_flt$gene, sum))
+}
+gene_data$AC_main = gene_data$AC_nfe + gene_data$AC_afr + gene_data$AC_amr + 
+  gene_data$AC_eas + gene_data$AC_sas
+for (i in colnames(vars_pext_flt)[an_cols]){
+  gene_data[, i] = as.numeric(by(vars_pext_flt[, i], vars_pext_flt$gene, mean))
+}
+gene_data$AN_main = gene_data$AN_nfe + gene_data$AN_afr + gene_data$AN_amr + 
+  gene_data$AN_eas + gene_data$AN_sas
+
+# Add covered genes with no pLoF
+dummy_row = c(rep(0, 8), rep(colMeans(gene_data[, 10:17])))
+zero_genes = unique(as.character(cov_data$name)[!(as.character(cov_data$name) 
+                             %in% as.character(gene_data$gene))])
+remainder = as.data.frame(t(sapply(zero_genes, function(x) c(x, dummy_row))))
+rownames(remainder) = c()
+colnames(remainder) = colnames(gene_data)
+
+pext_gene_data = as.data.frame(rbind(gene_data, remainder))
+num_cols = colnames(pext_gene_data)[grepl('A[CN]_', colnames(pext_gene_data))]
+for (col in num_cols){
+  pext_gene_data[, col] = as.numeric(as.character(pext_gene_data[, col]))
+}
+pext_gene_data$gene = as.factor(as.character(pext_gene_data$gene))
+pext_gene_data = 
+  pext_gene_data[pext_gene_data$AC_main/pext_gene_data$AN_main <= 0.001, ]
+
+
+# Cassa comparison
+cassa = read.table('cassa_table.csv', header=T, sep='\t')
+rownames(cassa) = cassa$gene_symbol
+pext_gene_data$U = sapply(pext_gene_data$gene, 
+                           function(x) cassa[as.character(x), 'U'])
+pext_gene_data = pext_gene_data[!(is.na(pext_gene_data$U)), ]
+pext_gene_data[is.na(pext_gene_data)] = 1
+
+perc = ecdf(pext_gene_data$U)
+pext_gene_data$tercile = floor(perc(pext_gene_data$U) * 3)
+pext_gene_data$tercile = ifelse(pext_gene_data$tercile < 3,
+                                 pext_gene_data$tercile + 1,
+                                 pext_gene_data$tercile)
+table(pext_gene_data$tercile)
+pext_gene_data$shet_cassa = sapply(pext_gene_data$gene, 
+                                    function(x) cassa[as.character(x), 's_het'])
+
+table(is.na(pext_gene_data$shet_cassa))
+
+rownames(pext_gene_data) = pext_gene_data$gene
+inheritance = read.table('genes_inheritance.txt', header=F, sep='\t', 
+                         stringsAsFactors = F, row.names=1)
+
+pext_gene_data$disease = sapply(rownames(pext_gene_data), 
+                          function(x) ifelse(x%in% rownames(inheritance), 
+                                             inheritance[x, 'V2'], 'none'))
+
+
+pext_gene_data$dbin = sapply(pext_gene_data$disease, 
+                    function(x) ifelse(x == "none", 0, 1))
+pext_gene_data$whole = apply(pext_gene_data,
+                              1,
+                              function(elt)
+                                chisq.test(matrix(c(as.numeric(elt[2:8]),
+                                                    as.numeric(elt[10:16])),
+                                                  byrow=T, nrow=2))$p.value)
+
+pext_gene_data$no_fin_asj = apply(pext_gene_data,
+                              1,
+                              function(elt)
+                                chisq.test(matrix(c(as.numeric(elt[2:6]),
+                                                    as.numeric(elt[10:14])),
+                                                  byrow=T, nrow=2))$p.value)
+
+for (i in 2:6) { 
+  pext_gene_data[, ncol(pext_gene_data) + 1] = apply(pext_gene_data, 
+                               1, 
+                               function(elt) 
+                                 chisq.test(matrix(c(as.numeric(elt[2:6][c(2:6) != i]),
+                                                     as.numeric(elt[10:14][c(10:14) != 8+i])),
+                                                   byrow=T, nrow=2))$p.value)
+}
+
+colnames(pext_gene_data) = c(colnames(pext_gene_data)[1:24], 'no_afr',
+                                     'no_sas', 'no_amr', 'no_eas', 'no_nfe')
+
+pext_gene_data$s_main = sapply(as.character(pext_gene_data$gene),
+        function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x,
+                                        's_main'])[1])
+#pext_gene_data = pext_gene_data[pext_gene_data$s_main >= 0.02, ]
+
+tpl = melt(pext_gene_data[, c(1, 21:29)], id.vars=c('gene', 'disease', 'dbin'))
+tpl = na.omit(tpl[tpl$value < 1e-5, ])
+
+sum(tpl$variable == 'whole')
+sum(tpl$variable == 'whole' & tpl$dbin == 1)
+
+sum(tpl$variable == 'no_fin_asj')
+sum(tpl$variable == 'no_fin_asj' & tpl$dbin == 1)
+
+ggplot(tpl, aes(x=variable, fill=as.factor(dbin))) + geom_bar() +
+  theme_bw() + coord_flip()
+
+pext_gene_data$no_fin_asj = sapply(pext_gene_data$no_fin_asj,
+                                    function(x) ifelse(is.na(x), 1, x))
+
+pext_gene_data$no_fin_asj_prior = sapply(as.character(pext_gene_data$gene),
+function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x, 'no_fin_asj'])[1])
+
+ggplot(pext_gene_data, aes(x=-log10(no_fin_asj_prior), y=-log10(no_fin_asj))) +
+  geom_hex(aes(fill=log10(..count..))) + 
+  theme_bw() +
+  xlab('chi-squared p-value pre-filter') + 
+  ylab('chi-squared p-value post-filter') + 
+  scale_fill_gradientn(colours = mypal)
+
+table(pext_gene_data$no_fin_asj > 1e-4 & pext_gene_data$no_fin_asj_prior < 1e-5)
+
+binconf(sum(pext_gene_data$no_fin_asj >= 1e-5 & 
+            pext_gene_data$no_fin_asj_prior < 1e-5, na.rm=T), 
+        sum(pext_gene_data$no_fin_asj_prior < 1e-5, na.rm=T))
+```
+
 
 ```{r savetheklavan, warning=FALSE}
 print('There are no E-s in Klavan')
+write.table(all_vars, file='gnomad_ptv_annotated.tsv', sep='\t',
+            quote=F, row.names=F)
 ```
+
+## Aggregation of the model results
+
+Let's see whether we can aggregate the results of the two predictors to yield something better. :)
+
+```{r combinepredictors, warning=FALSE}
+all_vars$geomean = sqrt(all_vars$prediction_prob_b * all_vars$pred_all_data)
+
+pROC_obj <- roc(all_vars$violator, all_vars$geomean,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+sens.ci <- ci.se(pROC_obj, conf.level = 0.99)
+plot(sens.ci, type="shape", col="lightblue")
+#plot(sens.ci, type="bars")
+#dev.off()
+
+all_vars$max_prob = ifelse(all_vars$prediction_prob_b > all_vars$pred_all_data,
+                           all_vars$prediction_prob_b, all_vars$pred_all_data)
+pROC_obj <- roc(all_vars$violator, all_vars$max_prob,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+sens.ci <- ci.se(pROC_obj, conf.level = 0.99)
+plot(sens.ci, type="shape", col="lightblue")
+#plot(sens.ci, type="bars")
+#dev.off()
+
+all_vars$binwise_prob = ifelse(all_vars$s_bin == 'high', 
+                               all_vars$prediction_prob_b,
+                               all_vars$pred_all_data)
+pROC_obj <- roc(all_vars$violator, all_vars$binwise_prob,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+sens.ci <- ci.se(pROC_obj, conf.level = 0.99)
+plot(sens.ci, type="shape", col="lightblue")
+#plot(sens.ci, type="bars")
+#dev.off()
+```
+
+While simply combining prediction results it not OK, bin-wise choice of the prediction model enhances the power of the analysis. Will it make ClinVar dissection also better?
+
+```{r clvbinwise, warning=FALSE}
+all_clv$s_main = sapply(as.character(all_clv$gene), 
+                  function(x) ifelse(x %in% rownames(cpl_head),
+                                     cpl_head[x, 's_main'],
+                                     0.05))
+all_clv$s_bin = ifelse(all_clv$s_main > 0.02, 'high',
+                       ifelse(all_clv$s_main > 0.006, 'medium', 'low'))
+
+all_clv$model_a = predict(my_forest_b, all_clv, type='vote')[, 2]
+all_clv$model_b = predict(my_forest_c, all_clv, type='vote')[, 2]
+all_clv$binwise = ifelse(all_clv$s_bin == 'high',
+                         all_clv$model_a, all_clv$model_b)
+
+all_clv_sub = all_clv[ifelse(as.character(all_clv$benign) == 'yes', TRUE,
+                             runif(nrow(all_clv)) < 0.1), ]
+
+pROC_obj <- roc(all_clv_sub$benign, all_clv_sub$pext_avg,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+sens.ci <- ci.se(pROC_obj)
+plot(sens.ci, type="shape", col="lightblue")
+
+pROC_obj <- roc(all_clv_sub$benign, all_clv_sub$binwise,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+sens.ci <- ci.se(pROC_obj)
+plot(sens.ci, type="shape", col="lightblue")
+
+```
+
+Hmm, nope combining the models makes ClinVar dissection worse. Nevertheless, the "b" model works pretty great in all tests despite having low initial AUC. :)
+
+Let's create a big masterplot!
+
+```{r masterplot, warning=FALSE}
+all_vars$pext_class_50 = all_vars$pext_avg < 0.5
+all_vars$pext_class_25 = all_vars$pext_avg < 0.25
+all_vars$pext_class_10 = all_vars$pext_avg < 0.1
+
+snippet_gn = all_vars[, c('violator', 's_bin', 'RF_class_25', 
+                          'RF_class_50', 'RF_class_75',
+                          'RF_class_25_c', 'RF_class_50_c',
+                          'RF_class_75_c', 'pext_class_50',
+                          'pext_class_25', 'pext_class_10')]
+
+all_clv$pext_class_50 = all_clv$pext_avg < 0.5
+all_clv$pext_class_25 = all_clv$pext_avg < 0.25
+all_clv$pext_class_10 = all_clv$pext_avg < 0.1
+all_clv$RF_class_25 = all_clv$model_a > 0.25
+all_clv$RF_class_50 = all_clv$model_a > 0.5
+all_clv$RF_class_75 = all_clv$model_a > 0.75
+all_clv$RF_class_25_c = all_clv$model_b > 0.25
+all_clv$RF_class_50_c = all_clv$model_b > 0.5
+all_clv$RF_class_75_c = all_clv$model_b > 0.75
+all_clv$violator = ifelse(all_clv$benign == 'yes',
+                          'clv_benign', 'clv_patho')
+
+snippet_clv = all_clv[, c('violator', 's_bin', 'RF_class_25', 
+                          'RF_class_50', 'RF_class_75',
+                          'RF_class_25_c', 'RF_class_50_c',
+                          'RF_class_75_c', 'pext_class_50',
+                          'pext_class_25', 'pext_class_10')]
+total = as.data.frame(rbind(snippet_gn, snippet_clv))
+total_mlt = melt(total, id.vars=c('violator', 's_bin'))
+
+total_mlt$model = ifelse(total_mlt$variable %in% c('RF_class_25', 
+                                                  'RF_class_50',
+                                                  'RF_class_75'),
+                         'model_a',
+                         ifelse(total_mlt$variable %in% c('RF_class_25_c',
+                                                          'RF_class_50_c',
+                                                          'RF_class_75_c'),
+                                'model_b', 'pext'))
+
+total_mlt$cutoff = ifelse(total_mlt$variable %in% c('RF_class_25', 
+                                                  'RF_class_25_c',
+                                                  'pext_class_50'),
+                         'loose',
+                         ifelse(total_mlt$variable %in% c('RF_class_50',
+                                                          'RF_class_50_c',
+                                                          'pext_class_25'),
+                                'moderate', 'strict'))
+
+colnames(total_mlt) = c('violator', 's_bin', 'classifier',
+                        'class', 'model', 'cutoff')
+
+ttl_stats = as.data.frame(as.matrix(aggregate(class~violator+s_bin+model+cutoff,
+                                              total_mlt,
+                        function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
+colnames(ttl_stats) = c('violator', 's_bin', 'model', 'cutoff',
+                        'PointEst', 'Lower', 'Upper')
+
+ttl_stats$PointEst = as.numeric(as.character(ttl_stats$PointEst))
+ttl_stats$Lower = as.numeric(as.character(ttl_stats$Lower))
+ttl_stats$Upper = as.numeric(as.character(ttl_stats$Upper))
+ttl_stats$s_bin = factor(ttl_stats$s_bin,
+                               levels=c('low', 'medium', 'high'))
+
+ggplot(ttl_stats, aes(x=s_bin, y=PointEst, fill=violator)) + 
+  geom_bar(col='black', stat='identity', position='dodge') + 
+  geom_errorbar(aes(ymin=Lower, ymax=Upper), lwd=0.5, 
+                width=0.4, position=position_dodge(width=1)) +
+  theme_bw() + xlab('Conservation level') +
+  ylab('% predicted positive') + 
+  facet_grid(vars(model), vars(cutoff)) +
+  theme(axis.text.x=element_text(angle=90, hjust=1)) +
+  scale_y_continuous(limits=c(0, 1))
+```
+
+## Constructing a model based on ClinVar variants
+
+Well, we've shown that the model trained to dissect violator and non-violator genes is efficiently predicting ClinVar benign status of a variant. But can we obtain a better predictor by fitting the model directly to ClinVar data? Let's examine the possibility.
+
+```{r clvforest, warning=FALSE}
+all_clv$benign = factor(all_clv$benign, levels=c('no','yes'))
+train_ind = sample(1:nrow(all_clv), 0.7*nrow(all_clv))
+trainset = all_clv[train_ind, ]
+include = as.character(trainset$benign) == 'yes' | runif(nrow(trainset)) < 0.1
+trainset_balanced = trainset[include, ]
+testset = all_clv[-train_ind, ]
+
+
+my_forest_d = randomForest(benign~ccr_exon_frac + is_mean + 
+                           is_max + rescue_conserved + pext_avg, 
+                         trainset_balanced, na.action = NULL)
+
+prediction_clv = predict(my_forest_d, testset, type="vote")
+testset$prediction_d = prediction_clv[, 2]
+
+pROC_obj <- roc(testset$benign, testset$prediction_d,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+sens.ci <- ci.se(pROC_obj, conf.level = 0.99)
+plot(sens.ci, type="shape", col="lightblue")
+#plot(sens.ci, type="bars")
+#dev.off()
+
+violatoRF_d_res = data.frame(prob=pROC_obj$thresholds,
+                           sens=pROC_obj$sensitivities,
+                           spec=pROC_obj$specificities)
+
+save(my_forest_d, file='classifier_d.RData')
+```
+
+The modelseems to work great! Let's apply it to all gnomAD variants to see how it goes there.
+
+```{r model_d_to_gn, warning=FALSE}
+all_vars$prediction_d = predict(my_forest_d, all_vars, type='vote')[, 2]
+
+pROC_obj <- roc(all_vars$violator, all_vars$prediction_d,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+sens.ci <- ci.se(pROC_obj, conf.level = 0.99)
+plot(sens.ci, type="shape", col="lightblue")
+
+```
+
+The performance is just flat out. Let's try to stratify the results to see if some differences in performance across $s_{het}$ bins can be seen.
+
+```{r model_d_eval_strata, warning=FALSE}
+all_vars$RF_class_25_d = all_vars$prediction_d > 0.25
+all_vars$RF_class_50_d = all_vars$prediction_d > 0.5
+all_vars$RF_class_75_d = all_vars$prediction_d > 0.75
+
+snippet = all_vars[, c('violator', 's_bin', 'RF_class_25_d',
+                       'RF_class_50_d', 'RF_class_75_d', 'pext_class')]
+snippet_molten = na.omit(melt(snippet, id.vars=c('violator', 's_bin')))
+
+cutoff_stats = as.data.frame(as.matrix(aggregate(value~s_bin+violator+variable, 
+                                              snippet_molten, 
+          function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
+
+colnames(cutoff_stats) = c('s_bin', 'violator', 'classifier', 'PointEst',
+                                      'Lower', 'Upper')
+cutoff_stats$PointEst = as.numeric(as.character(cutoff_stats$PointEst))
+cutoff_stats$Lower = as.numeric(as.character(cutoff_stats$Lower))
+cutoff_stats$Upper = as.numeric(as.character(cutoff_stats$Upper))
+cutoff_stats$s_bin = factor(cutoff_stats$s_bin,
+                               levels=c('low', 'medium', 'high'))
+
+print(cutoff_stats)
+
+ggplot(cutoff_stats, aes(x=s_bin, y=PointEst, fill=s_bin)) + 
+  geom_bar(col='black', stat='identity') + 
+  geom_errorbar(aes(ymin=Lower, ymax=Upper), lwd=0.5, width=0.4) +
+  theme_bw() + guides(fill=F) + xlab('Conservation level') +
+  ylab('% predicted positive') + 
+  facet_grid(vars(violator), vars(classifier))
+
+ggplot(cutoff_stats, aes(x=s_bin, y=PointEst, fill=violator)) + 
+  geom_bar(col='black', stat='identity', position='dodge') + 
+  geom_errorbar(aes(ymin=Lower, ymax=Upper), lwd=0.5, 
+                width=0.4, position=position_dodge(width=1)) +
+  theme_bw() + xlab('Conservation level') +
+  ylab('% predicted positive') + 
+  facet_wrap(~classifier, nrow=1) +
+  theme(axis.text.x=element_text(angle=90, hjust=1)) +
+  scale_y_continuous(limits=c(0,1))
+
+```
+
+Some difference can be seen across strata; moreover, we clearly see that the proportion of predicted low-confidence LoFs is greater in violator genes with high conservation level. This is very nice! Let's create one more "master plot" with all variant classes under consideration:
+
+```{r masterplot2, warning=FALSE}
+all_vars$pext_class_50 = all_vars$pext_avg < 0.5
+all_vars$pext_class_25 = all_vars$pext_avg < 0.25
+all_vars$pext_class_10 = all_vars$pext_avg < 0.1
+
+snippet_gn = all_vars[, c('violator', 's_bin', 'RF_class_25_c', 
+                          'RF_class_50_c', 'RF_class_75_c',
+                          'RF_class_25_d', 'RF_class_50_d',
+                          'RF_class_75_d', 'pext_class_50',
+                          'pext_class_25', 'pext_class_10')]
+
+all_clv$model_clinvar = predict(my_forest_d, all_clv, type='vote')[, 2]
+all_clv$pext_class_50 = all_clv$pext_avg < 0.5
+all_clv$pext_class_25 = all_clv$pext_avg < 0.25
+all_clv$pext_class_10 = all_clv$pext_avg < 0.1
+all_clv$RF_class_25_d = all_clv$model_clinvar > 0.25
+all_clv$RF_class_50_d = all_clv$model_clinvar > 0.5
+all_clv$RF_class_75_d = all_clv$model_clinvar > 0.75
+all_clv$RF_class_25_c = all_clv$model_b > 0.25
+all_clv$RF_class_50_c = all_clv$model_b > 0.5
+all_clv$RF_class_75_c = all_clv$model_b > 0.75
+all_clv$violator = ifelse(all_clv$benign == 'yes',
+                          'clv_benign', 'clv_patho')
+
+snippet_clv = all_clv[, c('violator', 's_bin', 'RF_class_25_d', 
+                          'RF_class_50_d', 'RF_class_75_d',
+                          'RF_class_25_c', 'RF_class_50_c',
+                          'RF_class_75_c', 'pext_class_50',
+                          'pext_class_25', 'pext_class_10')]
+total = as.data.frame(rbind(snippet_gn, snippet_clv))
+total_mlt = melt(total, id.vars=c('violator', 's_bin'))
+
+total_mlt$model = ifelse(total_mlt$variable %in% c('RF_class_25_d', 
+                                                  'RF_class_50_d',
+                                                  'RF_class_75_d'),
+                         'ClinVar',
+                         ifelse(total_mlt$variable %in% c('RF_class_25_c',
+                                                          'RF_class_50_c',
+                                                          'RF_class_75_c'),
+                                'gnomAD', 'pext'))
+
+total_mlt$cutoff = ifelse(total_mlt$variable %in% c('RF_class_25_d', 
+                                                  'RF_class_25_c',
+                                                  'pext_class_50'),
+                         'loose',
+                         ifelse(total_mlt$variable %in% c('RF_class_50_d',
+                                                          'RF_class_50_c',
+                                                          'pext_class_25'),
+                                'moderate', 'strict'))
+
+colnames(total_mlt) = c('violator', 's_bin', 'classifier',
+                        'class', 'model', 'cutoff')
+
+ttl_stats = as.data.frame(as.matrix(aggregate(class~violator+s_bin+model+cutoff,
+                                              total_mlt,
+                        function(x) binconf(sum(x), length(x) - sum(is.na(x))))))
+colnames(ttl_stats) = c('violator', 's_bin', 'model', 'cutoff',
+                        'PointEst', 'Lower', 'Upper')
+
+ttl_stats$PointEst = as.numeric(as.character(ttl_stats$PointEst))
+ttl_stats$Lower = as.numeric(as.character(ttl_stats$Lower))
+ttl_stats$Upper = as.numeric(as.character(ttl_stats$Upper))
+ttl_stats$s_bin = factor(ttl_stats$s_bin,
+                               levels=c('low', 'medium', 'high'))
+
+ggplot(ttl_stats, aes(x=s_bin, y=PointEst, fill=violator)) + 
+  geom_bar(col='black', stat='identity', position='dodge') + 
+  geom_errorbar(aes(ymin=Lower, ymax=Upper), lwd=0.5, 
+                width=0.4, position=position_dodge(width=0.9)) +
+  theme_bw() + xlab('Conservation level') +
+  ylab('% predicted positive') + 
+  facet_grid(vars(model), vars(cutoff)) +
+  theme(axis.text.x=element_text(angle=90, hjust=1)) +
+  scale_y_continuous(limits=c(0, 1))
+```
+
+
+We also can try to test for the exclusion of variants (if the clinvar-trained model would help to eliminate the non-uniformity of PTV count distribution).
+
+```{r rffilter3, warning=FALSE}
+vars_non_true = all_vars[all_vars$RF_class_25_d %in% c(FALSE, NA), ]
+gene_level = aggregate(AC_main ~ gene, vars_non_true, sum)
+gene_level$source_ac = sapply(as.character(gene_level$gene), function(x) cpl_head[x, 'AC_main'])
+
+ggplot(gene_level, aes(source_ac, AC_main)) + 
+  geom_hex(aes(fill=log10(..count..))) + 
+  theme_bw() + scale_fill_gradientn(colours = mypal)
+
+```
+
+What happens to the imbalance of PTV counts?
+
+```{r ptvfiltchisq3, warning=FALSE}
+cov_data = read.table('./covered_genes.tsv', header=T, sep='\t')
+
+vars_non_true = vars_non_true[as.character(vars_non_true$gene) %in% as.character(cov_data$name), ]
+vars_non_true$gene = droplevels(vars_non_true$gene)
+
+ac_cols = grepl('AC_', colnames(vars_non_true))
+an_cols = grepl('AN_', colnames(vars_non_true))
+
+gene_data = data.frame(gene = sort(unique(vars_non_true$gene)))
+for (i in colnames(vars_non_true)[ac_cols]){
+  gene_data[, i] = as.numeric(by(vars_non_true[, i], vars_non_true$gene, sum))
+}
+gene_data$AC_main = gene_data$AC_nfe + gene_data$AC_afr + gene_data$AC_amr + 
+  gene_data$AC_eas + gene_data$AC_sas
+for (i in colnames(vars_non_true)[an_cols]){
+  gene_data[, i] = as.numeric(by(vars_non_true[, i], vars_non_true$gene, mean))
+}
+gene_data$AN_main = gene_data$AN_nfe + gene_data$AN_afr + gene_data$AN_amr + 
+  gene_data$AN_eas + gene_data$AN_sas
+
+# Add covered genes with no pLoF
+dummy_row = c(rep(0, 8), rep(colMeans(gene_data[, 10:17])))
+zero_genes = unique(as.character(cov_data$name)[!(as.character(cov_data$name) 
+                             %in% as.character(gene_data$gene))])
+remainder = as.data.frame(t(sapply(zero_genes, function(x) c(x, dummy_row))))
+rownames(remainder) = c()
+colnames(remainder) = colnames(gene_data)
+
+flt_gene_data = as.data.frame(rbind(gene_data, remainder))
+num_cols = colnames(flt_gene_data)[grepl('A[CN]_', colnames(flt_gene_data))]
+for (col in num_cols){
+  flt_gene_data[, col] = as.numeric(as.character(flt_gene_data[, col]))
+}
+flt_gene_data$gene = as.factor(as.character(flt_gene_data$gene))
+flt_gene_data = 
+  flt_gene_data[flt_gene_data$AC_main/flt_gene_data$AN_main <= 0.001, ]
+
+
+# Cassa comparison
+cassa = read.table('cassa_table.csv', header=T, sep='\t')
+rownames(cassa) = cassa$gene_symbol
+flt_gene_data$U = sapply(flt_gene_data$gene, 
+                           function(x) cassa[as.character(x), 'U'])
+flt_gene_data = flt_gene_data[!(is.na(flt_gene_data$U)), ]
+flt_gene_data[is.na(flt_gene_data)] = 1
+
+perc = ecdf(flt_gene_data$U)
+flt_gene_data$tercile = floor(perc(flt_gene_data$U) * 3)
+flt_gene_data$tercile = ifelse(flt_gene_data$tercile < 3,
+                                 flt_gene_data$tercile + 1,
+                                 flt_gene_data$tercile)
+table(flt_gene_data$tercile)
+flt_gene_data$shet_cassa = sapply(flt_gene_data$gene, 
+                                    function(x) cassa[as.character(x), 's_het'])
+
+table(is.na(flt_gene_data$shet_cassa))
+
+rownames(flt_gene_data) = flt_gene_data$gene
+inheritance = read.table('genes_inheritance.txt', header=F, sep='\t', 
+                         stringsAsFactors = F, row.names=1)
+
+flt_gene_data$disease = sapply(rownames(flt_gene_data), 
+                          function(x) ifelse(x%in% rownames(inheritance), 
+                                             inheritance[x, 'V2'], 'none'))
+
+
+flt_gene_data$dbin = sapply(flt_gene_data$disease, 
+                    function(x) ifelse(x == "none", 0, 1))
+flt_gene_data$whole = apply(flt_gene_data,
+                              1,
+                              function(elt)
+                                chisq.test(matrix(c(as.numeric(elt[2:8]),
+                                                    as.numeric(elt[10:16])),
+                                                  byrow=T, nrow=2))$p.value)
+
+flt_gene_data$no_fin_asj = apply(flt_gene_data,
+                              1,
+                              function(elt)
+                                chisq.test(matrix(c(as.numeric(elt[2:6]),
+                                                    as.numeric(elt[10:14])),
+                                                  byrow=T, nrow=2))$p.value)
+
+for (i in 2:6) { 
+  flt_gene_data[, ncol(flt_gene_data) + 1] = apply(flt_gene_data, 
+                               1, 
+                               function(elt) 
+                                 chisq.test(matrix(c(as.numeric(elt[2:6][c(2:6) != i]),
+                                                     as.numeric(elt[10:14][c(10:14) != 8+i])),
+                                                   byrow=T, nrow=2))$p.value)
+}
+
+colnames(flt_gene_data) = c(colnames(flt_gene_data)[1:24], 'no_afr',
+                                     'no_sas', 'no_amr', 'no_eas', 'no_nfe')
+flt_gene_data$s_main = sapply(as.character(flt_gene_data$gene),
+        function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x,
+                                        's_main'])[1])
+#flt_gene_data = flt_gene_data[flt_gene_data$s_main >= 0.02, ]
+
+tpl = melt(flt_gene_data[, c(1, 21:29)], id.vars=c('gene', 'disease', 'dbin'))
+tpl = na.omit(tpl[tpl$value < 1e-5, ])
+
+sum(tpl$variable == 'whole')
+sum(tpl$variable == 'whole' & tpl$dbin == 1)
+
+sum(tpl$variable == 'no_fin_asj')
+sum(tpl$variable == 'no_fin_asj' & tpl$dbin == 1)
+
+ggplot(tpl, aes(x=variable, fill=as.factor(dbin))) + geom_bar() +
+  theme_bw() + coord_flip()
+
+flt_gene_data$no_fin_asj = sapply(flt_gene_data$no_fin_asj,
+                                    function(x) ifelse(is.na(x), 1, x))
+
+flt_gene_data$no_fin_asj_prior = sapply(as.character(flt_gene_data$gene),
+function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x, 'no_fin_asj'])[1])
+
+ggplot(flt_gene_data, aes(x=-log10(no_fin_asj_prior), y=-log10(no_fin_asj))) +
+  geom_hex(aes(fill=log10(..count..))) + 
+  theme_bw() +
+  xlab('chi-squared p-value pre-filter') + 
+  ylab('chi-squared p-value post-filter') + 
+  scale_fill_gradientn(colours = mypal)
+
+table(flt_gene_data$no_fin_asj > 1e-5 & flt_gene_data$no_fin_asj_prior < 1e-5)
+
+binconf(sum(flt_gene_data$no_fin_asj >= 1e-5 & 
+            flt_gene_data$no_fin_asj_prior < 1e-5, na.rm=T), 
+        sum(flt_gene_data$no_fin_asj_prior < 1e-5, na.rm=T))
+```
+Compare the percentage of genes with no imbalance after filtering with RF model compared to random exclusion of variants:
+
+```{r testrandom3, warning=FALSE}
+vars_random = all_vars[sample(1:nrow(all_vars), nrow(vars_non_true)), ]
+cov_data = read.table('./covered_genes.tsv', header=T, sep='\t')
+
+vars_random = vars_random[as.character(vars_random$gene) %in% as.character(cov_data$name), ]
+vars_random$gene = droplevels(vars_random$gene)
+
+ac_cols = grepl('AC_', colnames(vars_random))
+an_cols = grepl('AN_', colnames(vars_random))
+
+gene_data = data.frame(gene = sort(unique(vars_random$gene)))
+for (i in colnames(vars_random)[ac_cols]){
+  gene_data[, i] = as.numeric(by(vars_random[, i], vars_random$gene, sum))
+}
+gene_data$AC_main = gene_data$AC_nfe + gene_data$AC_afr + gene_data$AC_amr + 
+  gene_data$AC_eas + gene_data$AC_sas
+for (i in colnames(vars_random)[an_cols]){
+  gene_data[, i] = as.numeric(by(vars_random[, i], vars_random$gene, mean))
+}
+gene_data$AN_main = gene_data$AN_nfe + gene_data$AN_afr + gene_data$AN_amr + 
+  gene_data$AN_eas + gene_data$AN_sas
+
+# Add covered genes with no pLoF
+dummy_row = c(rep(0, 8), rep(colMeans(gene_data[, 10:17])))
+zero_genes = unique(as.character(cov_data$name)[!(as.character(cov_data$name) 
+                             %in% as.character(gene_data$gene))])
+remainder = as.data.frame(t(sapply(zero_genes, function(x) c(x, dummy_row))))
+rownames(remainder) = c()
+colnames(remainder) = colnames(gene_data)
+
+random_gene_data = as.data.frame(rbind(gene_data, remainder))
+num_cols = colnames(random_gene_data)[grepl('A[CN]_', colnames(random_gene_data))]
+for (col in num_cols){
+  random_gene_data[, col] = as.numeric(as.character(random_gene_data[, col]))
+}
+random_gene_data$gene = as.factor(as.character(random_gene_data$gene))
+random_gene_data = 
+  random_gene_data[random_gene_data$AC_main/random_gene_data$AN_main <= 0.001, ]
+
+
+# Cassa comparison
+cassa = read.table('cassa_table.csv', header=T, sep='\t')
+rownames(cassa) = cassa$gene_symbol
+random_gene_data$U = sapply(random_gene_data$gene, 
+                           function(x) cassa[as.character(x), 'U'])
+random_gene_data = random_gene_data[!(is.na(random_gene_data$U)), ]
+random_gene_data[is.na(random_gene_data)] = 1
+
+perc = ecdf(random_gene_data$U)
+random_gene_data$tercile = floor(perc(random_gene_data$U) * 3)
+random_gene_data$tercile = ifelse(random_gene_data$tercile < 3,
+                                 random_gene_data$tercile + 1,
+                                 random_gene_data$tercile)
+table(random_gene_data$tercile)
+random_gene_data$shet_cassa = sapply(random_gene_data$gene, 
+                                    function(x) cassa[as.character(x), 's_het'])
+
+table(is.na(random_gene_data$shet_cassa))
+
+rownames(random_gene_data) = random_gene_data$gene
+inheritance = read.table('genes_inheritance.txt', header=F, sep='\t', 
+                         stringsAsFactors = F, row.names=1)
+
+random_gene_data$disease = sapply(rownames(random_gene_data), 
+                          function(x) ifelse(x%in% rownames(inheritance), 
+                                             inheritance[x, 'V2'], 'none'))
+
+
+random_gene_data$dbin = sapply(random_gene_data$disease, 
+                    function(x) ifelse(x == "none", 0, 1))
+random_gene_data$whole = apply(random_gene_data,
+                              1,
+                              function(elt)
+                                chisq.test(matrix(c(as.numeric(elt[2:8]),
+                                                    as.numeric(elt[10:16])),
+                                                  byrow=T, nrow=2))$p.value)
+
+random_gene_data$no_fin_asj = apply(random_gene_data,
+                              1,
+                              function(elt)
+                                chisq.test(matrix(c(as.numeric(elt[2:6]),
+                                                    as.numeric(elt[10:14])),
+                                                  byrow=T, nrow=2))$p.value)
+
+for (i in 2:6) { 
+  random_gene_data[, ncol(random_gene_data) + 1] = apply(random_gene_data, 
+                               1, 
+                               function(elt) 
+                                 chisq.test(matrix(c(as.numeric(elt[2:6][c(2:6) != i]),
+                                                     as.numeric(elt[10:14][c(10:14) != 8+i])),
+                                                   byrow=T, nrow=2))$p.value)
+}
+
+colnames(random_gene_data) = c(colnames(random_gene_data)[1:24], 'no_afr',
+                                     'no_sas', 'no_amr', 'no_eas', 'no_nfe')
+random_gene_data$s_main = sapply(as.character(random_gene_data$gene),
+        function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x,
+                                        's_main'])[1])
+#random_gene_data = random_gene_data[random_gene_data$s_main >= 0.02, ]
+
+tpl = melt(random_gene_data[, c(1, 21:29)], id.vars=c('gene', 'disease', 'dbin'))
+tpl = na.omit(tpl[tpl$value < 1e-5, ])
+
+sum(tpl$variable == 'whole')
+sum(tpl$variable == 'whole' & tpl$dbin == 1)
+
+sum(tpl$variable == 'no_fin_asj')
+sum(tpl$variable == 'no_fin_asj' & tpl$dbin == 1)
+
+ggplot(tpl, aes(x=variable, fill=as.factor(dbin))) + geom_bar() +
+  theme_bw() + coord_flip()
+
+random_gene_data$no_fin_asj = sapply(random_gene_data$no_fin_asj,
+                                    function(x) ifelse(is.na(x), 1, x))
+
+random_gene_data$no_fin_asj_prior = sapply(as.character(random_gene_data$gene),
+function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x, 'no_fin_asj'])[1])
+
+ggplot(random_gene_data, aes(x=-log10(no_fin_asj_prior), y=-log10(no_fin_asj))) +
+  geom_hex(aes(fill=log10(..count..))) + 
+  theme_bw() +
+  xlab('chi-squared p-value pre-filter') + 
+  ylab('chi-squared p-value post-filter') + 
+  scale_fill_gradientn(colours = mypal)
+
+table(random_gene_data$no_fin_asj > 1e-5 & random_gene_data$no_fin_asj_prior < 1e-5)
+
+binconf(sum(random_gene_data$no_fin_asj >= 1e-5 & 
+            random_gene_data$no_fin_asj_prior < 1e-5, na.rm=T), 
+        sum(random_gene_data$no_fin_asj_prior < 1e-5, na.rm=T))
+```
+
+And with the matching in terms of the number of removed variants pext-based filter.
+
+```{r pextfilter3, warning=FALSE}
+vars_pext_flt = all_vars[!(all_vars$pext_avg < 0.7), ]
+cov_data = read.table('./covered_genes.tsv', header=T, sep='\t')
+
+vars_pext_flt = vars_pext_flt[as.character(vars_pext_flt$gene) %in% as.character(cov_data$name), ]
+vars_pext_flt$gene = droplevels(vars_pext_flt$gene)
+
+ac_cols = grepl('AC_', colnames(vars_pext_flt))
+an_cols = grepl('AN_', colnames(vars_pext_flt))
+
+gene_data = data.frame(gene = sort(unique(vars_pext_flt$gene)))
+for (i in colnames(vars_pext_flt)[ac_cols]){
+  gene_data[, i] = as.numeric(by(vars_pext_flt[, i], vars_pext_flt$gene, sum))
+}
+gene_data$AC_main = gene_data$AC_nfe + gene_data$AC_afr + gene_data$AC_amr + 
+  gene_data$AC_eas + gene_data$AC_sas
+for (i in colnames(vars_pext_flt)[an_cols]){
+  gene_data[, i] = as.numeric(by(vars_pext_flt[, i], vars_pext_flt$gene, mean))
+}
+gene_data$AN_main = gene_data$AN_nfe + gene_data$AN_afr + gene_data$AN_amr + 
+  gene_data$AN_eas + gene_data$AN_sas
+
+# Add covered genes with no pLoF
+dummy_row = c(rep(0, 8), rep(colMeans(gene_data[, 10:17])))
+zero_genes = unique(as.character(cov_data$name)[!(as.character(cov_data$name) 
+                             %in% as.character(gene_data$gene))])
+remainder = as.data.frame(t(sapply(zero_genes, function(x) c(x, dummy_row))))
+rownames(remainder) = c()
+colnames(remainder) = colnames(gene_data)
+
+pext_gene_data = as.data.frame(rbind(gene_data, remainder))
+num_cols = colnames(pext_gene_data)[grepl('A[CN]_', colnames(pext_gene_data))]
+for (col in num_cols){
+  pext_gene_data[, col] = as.numeric(as.character(pext_gene_data[, col]))
+}
+pext_gene_data$gene = as.factor(as.character(pext_gene_data$gene))
+pext_gene_data = 
+  pext_gene_data[pext_gene_data$AC_main/pext_gene_data$AN_main <= 0.001, ]
+
+
+# Cassa comparison
+cassa = read.table('cassa_table.csv', header=T, sep='\t')
+rownames(cassa) = cassa$gene_symbol
+pext_gene_data$U = sapply(pext_gene_data$gene, 
+                           function(x) cassa[as.character(x), 'U'])
+pext_gene_data = pext_gene_data[!(is.na(pext_gene_data$U)), ]
+pext_gene_data[is.na(pext_gene_data)] = 1
+
+perc = ecdf(pext_gene_data$U)
+pext_gene_data$tercile = floor(perc(pext_gene_data$U) * 3)
+pext_gene_data$tercile = ifelse(pext_gene_data$tercile < 3,
+                                 pext_gene_data$tercile + 1,
+                                 pext_gene_data$tercile)
+table(pext_gene_data$tercile)
+pext_gene_data$shet_cassa = sapply(pext_gene_data$gene, 
+                                    function(x) cassa[as.character(x), 's_het'])
+
+table(is.na(pext_gene_data$shet_cassa))
+
+rownames(pext_gene_data) = pext_gene_data$gene
+inheritance = read.table('genes_inheritance.txt', header=F, sep='\t', 
+                         stringsAsFactors = F, row.names=1)
+
+pext_gene_data$disease = sapply(rownames(pext_gene_data), 
+                          function(x) ifelse(x%in% rownames(inheritance), 
+                                             inheritance[x, 'V2'], 'none'))
+
+
+pext_gene_data$dbin = sapply(pext_gene_data$disease, 
+                    function(x) ifelse(x == "none", 0, 1))
+pext_gene_data$whole = apply(pext_gene_data,
+                              1,
+                              function(elt)
+                                chisq.test(matrix(c(as.numeric(elt[2:8]),
+                                                    as.numeric(elt[10:16])),
+                                                  byrow=T, nrow=2))$p.value)
+
+pext_gene_data$no_fin_asj = apply(pext_gene_data,
+                              1,
+                              function(elt)
+                                chisq.test(matrix(c(as.numeric(elt[2:6]),
+                                                    as.numeric(elt[10:14])),
+                                                  byrow=T, nrow=2))$p.value)
+
+for (i in 2:6) { 
+  pext_gene_data[, ncol(pext_gene_data) + 1] = apply(pext_gene_data, 
+                               1, 
+                               function(elt) 
+                                 chisq.test(matrix(c(as.numeric(elt[2:6][c(2:6) != i]),
+                                                     as.numeric(elt[10:14][c(10:14) != 8+i])),
+                                                   byrow=T, nrow=2))$p.value)
+}
+
+colnames(pext_gene_data) = c(colnames(pext_gene_data)[1:24], 'no_afr',
+                                     'no_sas', 'no_amr', 'no_eas', 'no_nfe')
+
+pext_gene_data$s_main = sapply(as.character(pext_gene_data$gene),
+        function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x,
+                                        's_main'])[1])
+#pext_gene_data = pext_gene_data[pext_gene_data$s_main >= 0.02, ]
+
+tpl = melt(pext_gene_data[, c(1, 21:29)], id.vars=c('gene', 'disease', 'dbin'))
+tpl = na.omit(tpl[tpl$value < 1e-5, ])
+
+sum(tpl$variable == 'whole')
+sum(tpl$variable == 'whole' & tpl$dbin == 1)
+
+sum(tpl$variable == 'no_fin_asj')
+sum(tpl$variable == 'no_fin_asj' & tpl$dbin == 1)
+
+ggplot(tpl, aes(x=variable, fill=as.factor(dbin))) + geom_bar() +
+  theme_bw() + coord_flip()
+
+pext_gene_data$no_fin_asj = sapply(pext_gene_data$no_fin_asj,
+                                    function(x) ifelse(is.na(x), 1, x))
+
+pext_gene_data$no_fin_asj_prior = sapply(as.character(pext_gene_data$gene),
+function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x, 'no_fin_asj'])[1])
+
+ggplot(pext_gene_data, aes(x=-log10(no_fin_asj_prior), y=-log10(no_fin_asj))) +
+  geom_hex(aes(fill=log10(..count..))) + 
+  theme_bw() +
+  xlab('chi-squared p-value pre-filter') + 
+  ylab('chi-squared p-value post-filter') + 
+  scale_fill_gradientn(colours = mypal)
+
+table(pext_gene_data$no_fin_asj > 1e-4 & pext_gene_data$no_fin_asj_prior < 1e-5)
+
+binconf(sum(pext_gene_data$no_fin_asj >= 1e-5 & 
+            pext_gene_data$no_fin_asj_prior < 1e-5, na.rm=T), 
+        sum(pext_gene_data$no_fin_asj_prior < 1e-5, na.rm=T))
+```
+
+Yet another test - examine the AC distribution of varinats marked as lcpLoF by our classifiers!
+
+## Do our best-performing models prioritize high-AC variants?
+
+One more hypothesis might be that the variants having higher prediction probability (i.e., higher chance of being low-confidence ploF) should also have higher AC as they tend to drive the imbalance of PTV counts across populations. Let's examine this hypothesis:
+
+```{r lcplofac, warning=FALSE}
+ggplot(all_vars, aes(x=RF_class_25_d, y=AC_main, fill=RF_class_25_d)) +
+  geom_violin(alpha=0.5, lwd=0.5) + 
+  geom_boxplot(width=0.4, lwd=0.5, outlier.shape=NA, fill='white') +
+  theme_bw() + scale_y_continuous(limits=c(0, 80))
+
+ggplot(all_vars, aes(x=prediction_d, y=AC_main)) + 
+  geom_hex(aes(fill=log10(..count..))) + 
+  theme_bw() + scale_fill_gradientn(colours = mypal)
+
+cor.test(all_vars$prediction_d, all_vars$AC_main)
+
+ggplot(all_vars, aes(x=pred_all_data, y=AC_main)) + 
+  geom_hex(aes(fill=log10(..count..))) + 
+  theme_bw() + scale_fill_gradientn(colours = mypal)
+
+cor.test(all_vars$pred_all_data, all_vars$AC_main)
+
+```
+
+It's very cool to see that there is a very small but significant positive correlation between AC and prediction probability for both gnomAD-trained and ClinVar-trained model; moreover, consistently with the results of the "exclusion test", the coefficient is higher for the gnomAD-based model.
+
+<!-- Let's try to construct a genuine meta-score using the three models to predict violator status and ClinVar annotation: -->
+
+<!-- ```{r metascoreclv, warning=FALSE} -->
+<!-- all_clv$prediction_c = predict(my_forest_c, all_clv, type='vote')[,2] -->
+<!-- all_clv$prediction_b = predict(my_forest_b, all_clv, type='vote')[,2] -->
+<!-- all_clv$prediction_d = predict(my_forest_d, all_clv, type='vote')[,2] -->
+<!-- train_ind = sample(1:nrow(all_clv), 0.7*nrow(all_clv)) -->
+<!-- trainset = all_clv[train_ind, ] -->
+<!-- include = as.character(trainset$benign) == 'yes' | runif(nrow(trainset)) < 0.1 -->
+<!-- trainset_balanced = trainset[include, ] -->
+<!-- testset = all_clv[-train_ind, ] -->
+
+
+<!-- my_forest_e = randomForest(benign~prediction_d + prediction_b + -->
+<!--                              prediction_c, trainset_balanced, -->
+<!--                            na.action=NULL) -->
+
+<!-- testset$metascore = predict(my_forest_e, testset, type='vote')[, 2] -->
+
+<!-- pROC_obj <- roc(testset$benign, testset$metascore, -->
+<!--                 smoothed = TRUE, -->
+<!--                 # arguments for ci -->
+<!--                 ci=TRUE, ci.alpha=0.9, stratified=FALSE, -->
+<!--                 # arguments for plot -->
+<!--                 plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE, -->
+<!--                 print.auc=TRUE, show.thres=TRUE) -->
+
+<!-- sens.ci <- ci.se(pROC_obj, conf.level = 0.99) -->
+<!-- plot(sens.ci, type="shape", col="lightblue") -->
+
+<!-- all_vars$prediction_b = all_vars$prediction_prob_b -->
+<!-- all_vars$prediction_c = predict(my_forest_c, all_vars, type='vote')[, 2] -->
+<!-- all_vars$prediction_e = predict(my_forest_e, all_vars, type='vote')[, 2] -->
+
+<!-- pROC_obj <- roc(all_vars$violator, all_vars$prediction_e, -->
+<!--                 smoothed = TRUE, -->
+<!--                 # arguments for ci -->
+<!--                 ci=TRUE, ci.alpha=0.9, stratified=FALSE, -->
+<!--                 # arguments for plot -->
+<!--                 plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE, -->
+<!--                 print.auc=TRUE, show.thres=TRUE) -->
+
+<!-- sens.ci <- ci.se(pROC_obj, conf.level = 0.99) -->
+<!-- plot(sens.ci, type="shape", col="lightblue") -->
+
+<!-- ``` -->
+
+<!-- Well, the meta-score is no better than the ClinVar-based score - it has slightly better capacity to predict violators in the complete dataset, but it's not significantly better and worse than the gnomAD-derived model. -->
