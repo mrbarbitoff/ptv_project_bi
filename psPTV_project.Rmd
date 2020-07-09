@@ -2262,7 +2262,8 @@ The model seems to efficiently predict benignness of the ClinVar variants.
 Now let's see if the removal of variants with the new predictor will perform better than the random exclusion (piece of code copied from above)
 
 ```{r rffilter2, warning=FALSE}
-vars_non_true = all_vars[all_vars$RF_class_25_c %in% c(FALSE, NA), ]
+vars_non_true = all_vars[all_vars$pred_all_data < 0.4 |
+                           is.na(all_vars$pred_all_data), ]
 gene_level = aggregate(AC_main ~ gene, vars_non_true, sum)
 gene_level$source_ac = sapply(as.character(gene_level$gene), function(x) cpl_head[x, 'AC_main'])
 
@@ -3029,15 +3030,18 @@ ggplot(ttl_stats, aes(x=s_bin, y=PointEst, fill=violator)) +
   theme_bw() + xlab('Conservation level') +
   ylab('% predicted positive') + 
   facet_grid(vars(model), vars(cutoff)) +
-  theme(axis.text.x=element_text(angle=90, hjust=1)) +
-  scale_y_continuous(limits=c(0, 1))
+  theme(axis.text.x=element_text(angle=90, hjust=1),
+        panel.grid = element_blank()) +
+  scale_y_continuous(limits=c(0, 1)) + 
+  scale_fill_manual(values = c("#d2b12bff", "#5392f8ff", 
+                               "#fbbab5ff", "#7fdfe1ff"))
 ```
 
 
 We also can try to test for the exclusion of variants (if the clinvar-trained model would help to eliminate the non-uniformity of PTV count distribution).
 
 ```{r rffilter3, warning=FALSE}
-vars_non_true = all_vars[all_vars$RF_class_25_d %in% c(FALSE, NA), ]
+vars_non_true = all_vars[all_vars$RF_class_50_d %in% c(FALSE, NA), ]
 gene_level = aggregate(AC_main ~ gene, vars_non_true, sum)
 gene_level$source_ac = sapply(as.character(gene_level$gene), function(x) cpl_head[x, 'AC_main'])
 
@@ -3316,7 +3320,7 @@ binconf(sum(random_gene_data$no_fin_asj >= 1e-5 &
 And with the matching in terms of the number of removed variants pext-based filter.
 
 ```{r pextfilter3, warning=FALSE}
-vars_pext_flt = all_vars[!(all_vars$pext_avg < 0.7), ]
+vars_pext_flt = all_vars[!(all_vars$pext_avg < 0.35), ]
 cov_data = read.table('./covered_genes.tsv', header=T, sep='\t')
 
 vars_pext_flt = vars_pext_flt[as.character(vars_pext_flt$gene) %in% as.character(cov_data$name), ]
@@ -3524,3 +3528,300 @@ It's very cool to see that there is a very small but significant positive correl
 <!-- ``` -->
 
 <!-- Well, the meta-score is no better than the ClinVar-based score - it has slightly better capacity to predict violators in the complete dataset, but it's not significantly better and worse than the gnomAD-derived model. -->
+
+I also want to plot a total ROC curve.
+
+```{r combineroc, warning=FALSE}
+all_vars$violator = as.factor(all_vars$violator)
+train_ind = sample(1:nrow(all_vars), 0.9*nrow(all_vars))
+trainset = all_vars[train_ind, ]
+include = as.character(trainset$violator) == 'yes' | runif(nrow(trainset)) < 0.22
+trainset_balanced = trainset[include, ]
+testset = all_vars[-train_ind, ]
+
+testset$prediction_a = predict(my_forest_b, testset, type='vote')[, 2]
+testset$prediction_b = predict(my_forest_c, testset, type='vote')[, 2]
+
+a_cons_set = testset[testset$s_main > 0.02, ]
+
+pROC_obj_a <- roc(testset$violator, testset$prediction_a,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+pROC_obj_b <- roc(testset$violator, testset$prediction_b,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+pROC_obj_c <- roc(testset$violator, testset$pext_avg,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+pROC_obj_d <- roc(a_cons_set$violator, a_cons_set$prediction_a,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+pROC_obj_e <- roc(a_cons_set$violator, a_cons_set$prediction_b,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+pROC_obj_f <- roc(a_cons_set$violator, a_cons_set$pext_avg,
+                smoothed = TRUE,
+                # arguments for ci
+                ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+                # arguments for plot
+                plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+                print.auc=TRUE, show.thres=TRUE)
+
+pROC_obj_a$auc
+pROC_obj_b$auc
+pROC_obj_c$auc
+pROC_obj_d$auc
+pROC_obj_e$auc
+pROC_obj_f$auc
+
+roc_curves = data.frame(sens = c(pROC_obj_a$sensitivities,
+                                 pROC_obj_b$sensitivities,
+                                 pROC_obj_c$sensitivities,
+                                 pROC_obj_d$sensitivities,
+                                 pROC_obj_e$sensitivities,
+                                 pROC_obj_f$sensitivities),
+                        spec = c(pROC_obj_a$specificities,
+                                 pROC_obj_b$specificities,
+                                 pROC_obj_c$specificities,
+                                 pROC_obj_d$specificities,
+                                 pROC_obj_e$specificities,
+                                 pROC_obj_f$specificities),
+                        model = c(rep('A', length(pROC_obj_a$sensitivities)),
+                                  rep('B', length(pROC_obj_b$sensitivities)),
+                                  rep('C', length(pROC_obj_c$sensitivities)),
+                                  rep('A', length(pROC_obj_d$sensitivities)),
+                                  rep('B', length(pROC_obj_e$sensitivities)),
+                                  rep('C', length(pROC_obj_f$sensitivities))),
+                        set = c(rep('all', length(pROC_obj_a$sensitivities) + 
+                                      length(pROC_obj_b$sensitivities) +
+                                      length(pROC_obj_c$sensitivities)),
+                                rep('cons', length(pROC_obj_d$sensitivities) + 
+                                      length(pROC_obj_e$sensitivities) +
+                                      length(pROC_obj_f$sensitivities))))
+
+mycol1 = rgb(85, 138, 221, maxColorValue = 255)
+mycol2 = rgb(255, 192, 78, maxColorValue = 255)
+mycol3 = rgb(255, 121, 177, maxColorValue = 255)
+mycol4 = rgb(221, 221, 221, maxColorValue = 255)
+mycol5 = rgb(100, 89, 89, maxColorValue = 255)
+mycol6 = rgb(0, 189, 189, maxColorValue = 255)
+
+
+ggplot(roc_curves, aes(x=spec, y=sens, col=model)) + geom_line(lwd=1.4) +
+  geom_area(aes(group = model, fill=model), col=NA,
+              alpha = 0.35, position = 'identity') + theme_bw() +
+  theme(plot.grid=element_blank()) +
+  scale_x_reverse() + guides(fill=F, col=F) +
+  xlab('Specificity') + ylab('Sensitivity') +
+  facet_grid(vars(model), vars(set)) +
+  scale_color_manual(values=c(mycol1, mycol2, mycol3)) +
+  scale_fill_manual(values=c(mycol1, mycol2, mycol3))
+```
+
+And let's create the plot with AUCs of the gnomAD vs ClinVar model. 
+
+```{r aucs, warning=FALSE}
+aucs = data.frame(model = factor(c('pext', 'gnC', 'gnA', 'clv'),
+                                 levels=c('pext', 'gnC', 'gnA', 'clv')),
+                  auc = c(0.550, 0.549, 0.674, 0.781),
+                  lower = c(0.509, 0.507, 0.625, 0.709),
+                  upper = c(0.590, 0.592, 0.722, 0.854))
+
+a <- ggplot(aucs, aes(x=model, y=auc, fill=model)) + 
+  geom_bar(stat='identity', col='black') +
+  geom_errorbar(aes(ymin=lower, ymax=upper, width=0.4)) +
+  theme_bw() + theme(panel.grid = element_blank()) +
+  scale_fill_manual(values=c(mycol3, mycol1, mycol2, mycol6))
+
+print(a)
+```
+
+Finally, we have to create a plot with the percentages of genes with PTV count distribution non-uniformity (this goes to Fig. 2f).
+
+```{r makegenecounts, warning=FALSE}
+get_value <- function(df){
+  cov_data = read.table('./covered_genes.tsv', header=T, sep='\t')
+
+  df = df[as.character(df$gene) %in% as.character(cov_data$name), ]
+  df$gene = droplevels(df$gene)
+  
+  ac_cols = grepl('AC_', colnames(df))
+  an_cols = grepl('AN_', colnames(df))
+  
+  gene_data = data.frame(gene = sort(unique(df$gene)))
+  for (i in colnames(df)[ac_cols]){
+    gene_data[, i] = as.numeric(by(df[, i], df$gene, sum))
+  }
+  gene_data$AC_main = gene_data$AC_nfe + gene_data$AC_afr + gene_data$AC_amr + 
+    gene_data$AC_eas + gene_data$AC_sas
+  for (i in colnames(df)[an_cols]){
+    gene_data[, i] = as.numeric(by(df[, i], df$gene, mean))
+  }
+  gene_data$AN_main = gene_data$AN_nfe + gene_data$AN_afr + gene_data$AN_amr + 
+    gene_data$AN_eas + gene_data$AN_sas
+  
+  # Add covered genes with no pLoF
+  dummy_row = c(rep(0, 8), rep(colMeans(gene_data[, 10:17])))
+  zero_genes = unique(as.character(cov_data$name)[!(as.character(cov_data$name) 
+                               %in% as.character(gene_data$gene))])
+  remainder = as.data.frame(t(sapply(zero_genes, function(x) c(x, dummy_row))))
+  rownames(remainder) = c()
+  colnames(remainder) = colnames(gene_data)
+  
+  flt_gene_data = as.data.frame(rbind(gene_data, remainder))
+  num_cols = colnames(flt_gene_data)[grepl('A[CN]_', colnames(flt_gene_data))]
+  for (col in num_cols){
+    flt_gene_data[, col] = as.numeric(as.character(flt_gene_data[, col]))
+  }
+  flt_gene_data$gene = as.factor(as.character(flt_gene_data$gene))
+  flt_gene_data = 
+    flt_gene_data[flt_gene_data$AC_main/flt_gene_data$AN_main <= 0.001, ]
+  
+  
+  # Cassa comparison
+  cassa = read.table('cassa_table.csv', header=T, sep='\t')
+  rownames(cassa) = cassa$gene_symbol
+  flt_gene_data$U = sapply(flt_gene_data$gene, 
+                             function(x) cassa[as.character(x), 'U'])
+  flt_gene_data = flt_gene_data[!(is.na(flt_gene_data$U)), ]
+  flt_gene_data[is.na(flt_gene_data)] = 1
+  
+  perc = ecdf(flt_gene_data$U)
+  flt_gene_data$tercile = floor(perc(flt_gene_data$U) * 3)
+  flt_gene_data$tercile = ifelse(flt_gene_data$tercile < 3,
+                                   flt_gene_data$tercile + 1,
+                                   flt_gene_data$tercile)
+  table(flt_gene_data$tercile)
+  flt_gene_data$shet_cassa = sapply(flt_gene_data$gene, 
+                                      function(x) cassa[as.character(x), 's_het'])
+  
+  table(is.na(flt_gene_data$shet_cassa))
+  
+  rownames(flt_gene_data) = flt_gene_data$gene
+  inheritance = read.table('genes_inheritance.txt', header=F, sep='\t', 
+                           stringsAsFactors = F, row.names=1)
+  
+  flt_gene_data$disease = sapply(rownames(flt_gene_data), 
+                            function(x) ifelse(x%in% rownames(inheritance), 
+                                               inheritance[x, 'V2'], 'none'))
+  
+  
+  flt_gene_data$dbin = sapply(flt_gene_data$disease, 
+                      function(x) ifelse(x == "none", 0, 1))
+  flt_gene_data$whole = apply(flt_gene_data,
+                                1,
+                                function(elt)
+                                  chisq.test(matrix(c(as.numeric(elt[2:8]),
+                                                      as.numeric(elt[10:16])),
+                                                    byrow=T, nrow=2))$p.value)
+  
+  flt_gene_data$no_fin_asj = apply(flt_gene_data,
+                                1,
+                                function(elt)
+                                  chisq.test(matrix(c(as.numeric(elt[2:6]),
+                                                      as.numeric(elt[10:14])),
+                                                    byrow=T, nrow=2))$p.value)
+  
+  for (i in 2:6) { 
+    flt_gene_data[, ncol(flt_gene_data) + 1] = apply(flt_gene_data, 
+                                 1, 
+                                 function(elt) 
+                                   chisq.test(matrix(c(as.numeric(elt[2:6][c(2:6) != i]),
+                                                       as.numeric(elt[10:14][c(10:14) != 8+i])),
+                                                     byrow=T, nrow=2))$p.value)
+  }
+  
+  colnames(flt_gene_data) = c(colnames(flt_gene_data)[1:24], 'no_afr',
+                                       'no_sas', 'no_amr', 'no_eas', 'no_nfe')
+  flt_gene_data$s_main = sapply(as.character(flt_gene_data$gene),
+          function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x,
+                                          's_main'])[1])
+  #flt_gene_data = flt_gene_data[flt_gene_data$s_main >= 0.02, ]
+  
+  tpl = melt(flt_gene_data[, c(1, 21:29)], id.vars=c('gene', 'disease', 'dbin'))
+  tpl = na.omit(tpl[tpl$value < 1e-5, ])
+  
+  sum(tpl$variable == 'whole')
+  sum(tpl$variable == 'whole' & tpl$dbin == 1)
+  
+  sum(tpl$variable == 'no_fin_asj')
+  sum(tpl$variable == 'no_fin_asj' & tpl$dbin == 1)
+  
+  ggplot(tpl, aes(x=variable, fill=as.factor(dbin))) + geom_bar() +
+    theme_bw() + coord_flip()
+  
+  flt_gene_data$no_fin_asj = sapply(flt_gene_data$no_fin_asj,
+                                      function(x) ifelse(is.na(x), 1, x))
+  
+  flt_gene_data$no_fin_asj_prior = sapply(as.character(flt_gene_data$gene),
+  function(x) as.numeric(cpl_head[as.character(cpl_head$gene) == x, 'no_fin_asj'])[1])
+  
+  ggplot(flt_gene_data, aes(x=-log10(no_fin_asj_prior), y=-log10(no_fin_asj))) +
+    geom_hex(aes(fill=log10(..count..))) + 
+    theme_bw() +
+    xlab('chi-squared p-value pre-filter') + 
+    ylab('chi-squared p-value post-filter') + 
+    scale_fill_gradientn(colours = mypal)
+  
+  table(flt_gene_data$no_fin_asj > 1e-5 & flt_gene_data$no_fin_asj_prior < 1e-5)
+  
+  return(binconf(sum(flt_gene_data$no_fin_asj >= 1e-5 & 
+              flt_gene_data$no_fin_asj_prior < 1e-5, na.rm=T), 
+          sum(flt_gene_data$no_fin_asj_prior < 1e-5, na.rm=T)))
+  
+}
+
+rands <- get_value(all_vars[sample(1:nrow(all_vars), 92000),])
+pexts <- get_value(all_vars[all_vars$pext_avg > 0.6 |
+                              is.na(all_vars$pext_avg),])
+gna <- get_value(all_vars[all_vars$pred_all_data < 0.25 |
+                     is.na(all_vars$pred_all_data),])
+clv <- get_value(all_vars[all_vars$prediction_d <= 0.325 |
+                            is.na(all_vars$prediction_d),])
+
+removal = as.data.frame(sum(flt_gene_data$no_fin_asj_prior <= 1e-5, na.rm=T) -
+                  sum(flt_gene_data$no_fin_asj_prior <= 1e-5, na.rm=T) * 
+                    rbind(rands, pexts, gna, clv))
+removal$model = c('random', 'pext', 'gna', 'clv')
+removal[5, ] = c(sum(flt_gene_data$no_fin_asj_prior <= 1e-5, na.rm=T), NA,
+                 NA, 'noflt')
+colnames(removal) = c('PointEst', 'Upper', 'Lower', 'model')
+removal$model = factor(removal$model, levels=c('noflt', 'random',
+                                               'pext', 'gna', 'clv'))
+removal$PointEst = as.numeric(as.character(removal$PointEst))
+removal$Lower = as.numeric(as.character(removal$Lower))
+removal$Upper = as.numeric(as.character(removal$Upper))
+
+b <- ggplot(removal, aes(x=model, y=PointEst, fill=model)) + 
+  geom_bar(stat='identity', col='black') +
+  geom_errorbar(aes(ymin=Lower, ymax=Upper, width=0.4)) +
+  theme_bw() + theme(panel.grid = element_blank()) +
+  scale_fill_manual(values=c('white', 'gray', mycol3, mycol2, mycol6))
+
+plot_grid(a, b, nrow=1, rel_widths = c(0.8, 1))
+```
