@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Provide your VEP and LoFTEE-annotated VCF file as the first argument to this script
+# CC BY 4.0 authored by Yury A. Barbitoff and Rostislav K. Skitchenko
+################################################
+
+DATA=$1
+TOOL_DIR=$( dirname $0 )
+
+if [ "$1" == "-h" ] || [ "$1" == "" ]; then
+  echo "Usage: `basename $0` <your VCF file>"
+  exit 0
+fi
+
+echo "LOFfeR v. 1.0"
+echo "Starting computation..."
+
+python3.6 ${TOOL_DIR}/parse_vcf.py $DATA ${TOOL_DIR}/stat.tr.full.tsv
+grep -vP 'REF\tALT' ptv_data.tsv | cut -f 1-2 | awk 'OFS="\t" { $3=$2+3; $2=$2-3 ; print $1,$2,$3 }' > ptv.bed
+bedtools intersect -wo -a ptv.bed -b ${TOOL_DIR}/exones_ccrs.bed > ptv_ccrs.bed
+python3.6 ${TOOL_DIR}/add_ccr.py ptv_data.tsv ptv_ccrs.bed > ptv_with_ccrs.tsv
+python3.6 ${TOOL_DIR}/add_constraint.py $DATA ptv_with_ccrs.tsv ${TOOL_DIR}/gnomad.v2.1.1.lof_metrics.by_transcript.txt 0,1,2,8,9 ptv_with_constraint.tsv
+python3.6 ${TOOL_DIR}/add_avg_pext.py ptv_with_constraint.tsv ${TOOL_DIR}/pext_avg.tsv.gz > ptv_ready.tsv
+
+echo "Predicting low-confidence LoF variants..."
+
+Rscript ${TOOL_DIR}/predict.R ptv_ready.tsv ${TOOL_DIR}/classifier_A.RData ${TOOL_DIR}/classifier_B.RData &> /dev/null
+
+echo "Done. Thank you for using LoFfeR!"
