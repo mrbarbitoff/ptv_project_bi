@@ -1,5 +1,16 @@
-# ptv_project_bi
-PTV project at BI, 2017 - 2020 working repository
+# Harnessing population-specific protein-truncating variants to improve the annotation of loss-of-function alleles
 
-Putative loss-of-function (pLoF) variants are of ultimate relevance to Mendelian disease pathology. As such variants in disease-related genes are under strong negative natural selection, their frequency across major ancestral groups is expected to be highly similar. In this study, we tested this assumption by systematically assessing the presence of highly prevalent population-specific PTVs in human genes using population-scale data. We discovered unusually high incidence of population-specific PTVs in all major ancestral groups. Such prevalence of PTVs does not conform to a recently proposed statistical model, indicating either systematic differences in disease penetrance in different human populations or the failure of current annotation criteria to accurately predict the loss-of-function potential of PTVs. We show that low-confidence pLoF variants are indeed enriched in genes with non-uniform PTV count distribution. To tackle this issue, we develop a computation tool called LoFfeR that can efficiently predict tolerated pLoF variants. We evaluate the performance of LoFfeR, we use a set of known pathogenic and benign PTVs from the ClinVar database, and show that LoFfeR allows for more accurate annotation of low-confidence pLoF variants compared to existing methods and scores such as pext. Hence, we believe that LoFfeR can be used for filtering of low-confidence pLoF variants in population genetics and medical genetics studies.
+This repository contains all data and code pertinent to the analysis presented in the paper. This project is dedicated to the identification of population-specific PTVs (psPTVs) and building a predictive model to enhance annotation of low-confidence loss-of-function (LoF) alleles. 
+
+psPTVs are strongly enriched for low-confidence putative LoF (pLoF) variants. An example of a notable psPTV that is a misannotated low-conf pLoF is a rs139297920 in the *PAX3* gene:
+
+![alt text][pax3]
+
+`psPTV_project.Rmd` markdown file represents the body of the analysis and contains the complete explanation of all data analysis steps and conclusions.
+
+`LoFfeR` folder contains the source code and reference materials of the **LoFfeR** toolkit that was developed to enhance the annotation of low-confidence pLoF alleles.
+
+The other scripts included in this repository are:
+
+
 
