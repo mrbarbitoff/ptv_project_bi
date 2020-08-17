@@ -32,6 +32,8 @@ psPTVs are strongly enriched for low-confidence putative LoF (pLoF) variants. An
 
 ## LoFfeR usage
 
+**DISCLAIMER** THe tool is under active development. Please refer to bioRxiv for updates.
+
 To run LoFfeR, a tool to predict low-confidence pLoF variants in the VCF file, you will need R v.3.6+ with the randomForest package and Python 3.6+ with pandas, numpy packages installed.
 
 ### Installation
