@@ -10,6 +10,16 @@ psPTVs are strongly enriched for low-confidence putative LoF (pLoF) variants. An
 
 `LoFfeR` folder contains the source code and reference materials of the **LoFfeR** toolkit that was developed to enhance the annotation of low-confidence pLoF alleles. See below for usage details.
 
+`shet_estimation` directory contains scripts used for $s_het$ inference and calculation of the PTV count distribution likelihood and the observation likelihood score.
+
+`cassa_table.csv` is the main supporting table of the Cassa *et al.,* 2017 paper.
+
+`clv*tsv` are tab-separated data files containing the validation dataset of benign and confident pathogenic ClinVar variants. These data files are used during model training and evaluation.
+
+`covered_genes.tsv` is the file listing coordinates of the genes that have at least 30x mean coverage of coding regions in gnomAD.
+
+`full*tsv` are the main tab-separated data files containing the final annotated set of gnomAD PTVs used throughout the analysis. `full_data_constr_pext.tsv` is the final file produced after all necessary annotation steps.
+
 The other files and scripts included in this repository are:
 
 ## LoFfeR usage
