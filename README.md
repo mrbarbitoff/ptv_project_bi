@@ -14,12 +14,23 @@ The other files and scripts included in this repository are:
 
 ## LoFfeR usage
 
-To run LoFfeR, a tool to predict low-confidence pLoF variants in the VCF file, you will need R v.3.6+ (with the randomForest package), Python 3.6+ with pandas, numpy packages installed. please use the following command to run annotation:
+To run LoFfeR, a tool to predict low-confidence pLoF variants in the VCF file, you will need R v.3.6+ (with the randomForest package), Python 3.6+ with pandas, numpy packages installed.
+
+### Installation
+
+TO install LoFfeR, simply clone this repository and grant execution permissions to the main executable file:
 
 ```
 git clone https://github.com/mrbarbitoff/ptv_project_bi
 cd ptv_project_bi
 chmod +x ./LoFfeR/LoFfeR
+```
+
+### Running LoFfeR
+
+To run annotation of low-confidence pLoF variants, please use the following command:
+
+```
 ./LoFfeR/LoFfeR <VCF>
 ```
 
