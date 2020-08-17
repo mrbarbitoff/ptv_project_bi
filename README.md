@@ -24,7 +24,7 @@ psPTVs are strongly enriched for low-confidence putative LoF (pLoF) variants. An
 
 `full_data_constr_pext.tsv` is the main tab-separated data files containing the final annotated set of gnomAD PTVs used throughout the analysis. 
 
-`full_corr_wshet.tsv`, `full_out_boot_stats.csv`, `comprehensive_gene_annotation.tsv` are the tab-seprated files with the aggregated gene-level PTV counts. `comprehensive_gene_annotation.tsv` is the final file containing all necessary annotations.
+`full_aggregated.tsv`, `full_corr_wshet.tsv`, `full_out_boot_stats.csv`, `comprehensive_gene_annotation.tsv` are the tab-seprated files with the aggregated gene-level PTV counts. `comprehensive_gene_annotation.tsv` is the final file containing all necessary annotations.
 
 `merged_counts.tsv` is the GENCODE v19-derived tab-separated file containing per-gene isoform and exon counts.
 
