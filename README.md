@@ -10,7 +10,7 @@ psPTVs are strongly enriched for low-confidence putative LoF (pLoF) variants. An
 
 `LoFfeR` folder contains the source code and reference materials of the **LoFfeR** toolkit that was developed to enhance the annotation of low-confidence pLoF alleles. See below for usage details.
 
-`shet_estimation` directory contains scripts used for $s_het$ inference and calculation of the PTV count distribution likelihood and the observation likelihood score.
+`shet_estimation` directory contains scripts used for $s_het$ inference and calculation of the PTV count distribution likelihood and the observation likelihood score. `IG_params.py` fits the inverse Gaussian distribution to the data; `estimate_S.py` estimates the best-fit $s_{het}$ value, `CPL.py` calculates the likelihood of a PTV count distribution and conducts sampling.
 
 `cassa_table.csv` is the main supporting table of the Cassa *et al.,* 2017 paper.
 
