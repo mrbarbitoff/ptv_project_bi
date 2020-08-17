@@ -10,7 +10,6 @@ psPTVs are strongly enriched for low-confidence putative LoF (pLoF) variants. An
 
 `LoFfeR` folder contains the source code and reference materials of the **LoFfeR** toolkit that was developed to enhance the annotation of low-confidence pLoF alleles.
 
-The other scripts included in this repository are:
-
+The other files and scripts included in this repository are:
 
 
