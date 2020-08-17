@@ -1,6 +1,10 @@
 # Harnessing population-specific protein-truncating variants to improve the annotation of loss-of-function alleles
 
-This repository contains all data and code pertinent to the analysis presented in the paper. This project is dedicated to the identification of population-specific PTVs (psPTVs) and building a predictive model to enhance annotation of low-confidence loss-of-function (LoF) alleles. 
+This repository contains all data and code pertinent to the analysis presented in the paper. 
+
+Skitchenko R.K., Kornienko J.S., Maksiutenko E.M., Glotov A.S., Predeus A.V. and Barbitoff Y.A. (2020) Harnessing population-specific protein-truncating variants to improve the annotation of loss-of-function alleles. *bioRxiv*
+
+This project is dedicated to the identification of population-specific PTVs (psPTVs) and building a predictive model to enhance annotation of low-confidence loss-of-function (LoF) alleles. 
 
 psPTVs are strongly enriched for low-confidence putative LoF (pLoF) variants. An example of a notable psPTV that is a misannotated low-conf pLoF is a rs139297920 in the *PAX3* gene:
 
