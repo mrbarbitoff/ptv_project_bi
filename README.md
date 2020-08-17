@@ -8,8 +8,18 @@ psPTVs are strongly enriched for low-confidence putative LoF (pLoF) variants. An
 
 `psPTV_project.Rmd` markdown file represents the body of the analysis and contains the complete explanation of all data analysis steps and conclusions.
 
-`LoFfeR` folder contains the source code and reference materials of the **LoFfeR** toolkit that was developed to enhance the annotation of low-confidence pLoF alleles.
+`LoFfeR` folder contains the source code and reference materials of the **LoFfeR** toolkit that was developed to enhance the annotation of low-confidence pLoF alleles. See below for usage details.
 
 The other files and scripts included in this repository are:
 
+## LoFfeR usage
 
+To run LoFfeR, a tool to predict low-confidence pLoF variants in the VCF file, you will need R v.3.6+ (with the randomForest package), Python 3.6+ with pandas, numpy packages installed. please use the following command to run annotation:
+
+```
+./LoFfeR/LoFfeR <VCF>
+```
+
+By default, LoFfeR expects a VEP-annotated VCF file to be passed as the first and only argument. The file should be annotated using the LOFTEE plugin (LoF), as only variants passing LOFTEE filter will be considered. LOFTEE fields are expected to be the trailing ones in each annotation. Currently, LoFfeR only supports GRCh37 (b37) VCF files. We are working to add the support for the GRCh38 reference as soon as possible.
+
+LoFfeR results are written to the `results.tsv` tab-separated file.
